@@ -3,6 +3,7 @@
 import React from 'react';
 import MobileLayout from '@/components/MobileLayout';
 import ProductCard from '@/components/ProductCard';
+import NotificationPanel from '@/components/NotificationPanel';
 import { Input } from '@/components/ui/input';
 import { Search, Bell, Sparkles, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -26,10 +27,12 @@ const CustomerHome = () => {
             </div>
             <h1 className="text-2xl font-display font-bold text-white">Welcome back</h1>
           </div>
-          <button className="relative p-2.5 bg-white/10 rounded-2xl border border-white/10 backdrop-blur-md">
-            <Bell size={20} className="text-brand-gold" />
-            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-brand-red rounded-full border-2 border-brand-black"></span>
-          </button>
+          <NotificationPanel>
+            <button className="relative p-2.5 bg-white/10 rounded-2xl border border-white/10 backdrop-blur-md transition-all active:scale-90">
+              <Bell size={20} className="text-brand-gold" />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-brand-red rounded-full border-2 border-brand-black"></span>
+            </button>
+          </NotificationPanel>
         </header>
 
         <div className="relative">

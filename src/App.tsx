@@ -9,6 +9,7 @@ import CustomerHome from "./pages/customer/Home";
 import Traceability from "./pages/customer/Traceability";
 import CustomerOrders from "./pages/customer/Orders";
 import Profile from "./pages/customer/Profile";
+import Notifications from "./pages/customer/Notifications";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminOrders from "./pages/admin/Orders";
 import AdminStaff from "./pages/admin/Staff";
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/customer/trace" element={<Traceability />} />
           <Route path="/customer/orders" element={<CustomerOrders />} />
           <Route path="/customer/profile" element={<Profile />} />
+          <Route path="/customer/notifications" element={<Notifications />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
