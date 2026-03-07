@@ -129,10 +129,14 @@ const ProductList = () => {
               <motion.div
                 key={product.id}
                 layout
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.2 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ 
+                  layout: { type: "spring", stiffness: 300, damping: 30 },
+                  opacity: { duration: 0.2 },
+                  scale: { duration: 0.2 }
+                }}
               >
                 <ProductCard product={product} />
               </motion.div>
