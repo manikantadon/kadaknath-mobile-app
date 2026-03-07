@@ -33,7 +33,6 @@ const Login = () => {
     setTimeout(() => {
       const validUsers = ['admin', 'customer', 'driver'];
       
-      // Check both username and password together to prevent enumeration
       if (data.password === '12345678' && validUsers.includes(data.username)) {
         if (data.username === 'admin') {
           showSuccess('Welcome back, Administrator');
@@ -46,7 +45,6 @@ const Login = () => {
           navigate('/driver');
         }
       } else {
-        // Generic error message for security
         showError('Invalid username or password');
       }
       setIsLoading(false);
@@ -74,7 +72,7 @@ const Login = () => {
         </div>
 
         <div className="bg-card rounded-[2.5rem] p-8 shadow-xl shadow-black/5 border border-border">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate autoComplete="new-off">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Username</label>
               <div className="relative">
@@ -85,6 +83,7 @@ const Login = () => {
                 <Input 
                   {...register("username", { required: "Username is required" })}
                   type="text"
+                  autoComplete="chrome-off"
                   placeholder="Enter your username"
                   className={cn(
                     "pl-11 h-14 rounded-2xl border-border bg-muted/30 focus-visible:ring-brand-gold text-foreground transition-all",
@@ -108,7 +107,7 @@ const Login = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Password</label>
+              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Secure Key</label>
               <div className="relative">
                 <Lock className={cn(
                   "absolute left-4 top-1/2 -translate-y-1/2 transition-colors",
@@ -116,11 +115,13 @@ const Login = () => {
                 )} size={18} />
                 <Input 
                   {...register("password", { 
-                    required: "Password is required",
+                    required: "Entry key is required",
                     minLength: { value: 8, message: "Minimum 8 characters" }
                   })}
-                  type="password"
+                  type="text"
+                  autoComplete="off"
                   placeholder="••••••••"
+                  style={{ WebkitTextSecurity: 'disc' } as any}
                   className={cn(
                     "pl-11 h-14 rounded-2xl border-border bg-muted/30 focus-visible:ring-brand-gold text-foreground transition-all",
                     errors.password && "border-brand-red/50 bg-brand-red/5 focus-visible:ring-brand-red"
