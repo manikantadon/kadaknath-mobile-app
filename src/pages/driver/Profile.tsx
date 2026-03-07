@@ -21,8 +21,10 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { showSuccess } from '@/utils/toast';
+import { useNavigate } from 'react-router-dom';
 
 const DriverProfile = () => {
+  const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(true);
   const [activeTab, setActiveTab] = useState('active');
 
@@ -55,6 +57,11 @@ const DriverProfile = () => {
   const handleToggleAvailability = (checked: boolean) => {
     setIsOnline(checked);
     showSuccess(checked ? "You are now Online" : "You are now Offline");
+  };
+
+  const handleLogout = () => {
+    showSuccess("Logged out successfully");
+    navigate('/');
   };
 
   return (
@@ -220,7 +227,10 @@ const DriverProfile = () => {
             </div>
             <ChevronRight size={18} className="text-slate-300" />
           </button>
-          <button className="w-full py-4 flex items-center justify-center gap-2 text-brand-red font-bold text-sm border-2 border-brand-red/10 rounded-2xl hover:bg-brand-red/5 transition-colors">
+          <button 
+            onClick={handleLogout}
+            className="w-full py-4 flex items-center justify-center gap-2 text-brand-red font-bold text-sm border-2 border-brand-red/10 rounded-2xl hover:bg-brand-red/5 transition-colors"
+          >
             <Power size={18} />
             Sign Out
           </button>

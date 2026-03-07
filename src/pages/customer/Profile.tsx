@@ -16,8 +16,12 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
+import { useNavigate } from 'react-router-dom';
+import { showSuccess } from '@/utils/toast';
 
 const Profile = () => {
+  const navigate = useNavigate();
+  
   const user = {
     name: "Rahul Sharma",
     email: "rahul.s@example.com",
@@ -32,6 +36,11 @@ const Profile = () => {
     { icon: Headset, label: "Help & Support", sub: "24/7 premium support" },
     { icon: Settings, label: "Account Settings", sub: "Privacy and security" },
   ];
+
+  const handleLogout = () => {
+    showSuccess("Logged out successfully");
+    navigate('/');
+  };
 
   return (
     <MobileLayout role="customer">
@@ -121,7 +130,10 @@ const Profile = () => {
         </div>
 
         {/* Logout */}
-        <button className="w-full py-4 flex items-center justify-center gap-2 text-brand-red font-bold text-sm border-2 border-brand-red/10 rounded-2xl hover:bg-brand-red/5 transition-colors">
+        <button 
+          onClick={handleLogout}
+          className="w-full py-4 flex items-center justify-center gap-2 text-brand-red font-bold text-sm border-2 border-brand-red/10 rounded-2xl hover:bg-brand-red/5 transition-colors"
+        >
           <LogOut size={18} />
           Sign Out
         </button>
