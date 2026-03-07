@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import MobileLayout from "@/components/MobileLayout";
 import {
   QrCode,
@@ -16,12 +16,16 @@ import {
   Truck,
   CheckCircle2,
   ExternalLink,
+  Camera,
+  X,
+  RefreshCcw,
+  Zap
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
-import { showSuccess } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 
 const BATCH_DATA = {
@@ -35,7 +39,7 @@ const BATCH_DATA = {
   journey: [
     {
       id: 1,
-      title: "Chatchery & Brooding",
+      title: "Hatchery & Brooding",
       desc: "Sourced from pure-line Kadaknath breeders. Initial 21 days brooding under controlled temp.",
       date: "Aug 15, 2023",
       loc: "Central Breeder Unit",
@@ -82,26 +86,60 @@ const BATCH_DATA = {
 };
 
 const Traceability = () => {
-  const [isScanning, setIsScanning] = useState(true);
+  const [activeTab, setActiveTab] = useState<'scan' | 'result'>('scan');
   const [batchId, setBatchId] = useState("");
-  const [showResult, setShowResult] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
-  const handleScan = () => {
-    setIsScanning(false);
-    setTimeout(() => {
-      setShowResult(true);
-      showSuccess("Batch verified successfully! 🏷️");
-    }, 800);
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        streamRef.current = stream;
+        setIsCameraActive(true);
+      }
+    } catch (err) {
+      showError("Could not access camera. Please check permissions.");
+      console.error(err);
+    }
   };
 
-  if (showResult) {
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  useEffect(() => {
+    return () => stopCamera();
+  }, []);
+
+  const handleSimulatedScan = () => {
+    const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
+    audio.play().catch(() => {});
+    
+    stopCamera();
+    setTimeout(() => {
+      setActiveTab('result');
+      showSuccess("Batch verified successfully! 🏷️");
+    }, 500);
+  };
+
+  if (activeTab === 'result') {
     return (
       <MobileLayout role="customer">
         <div className="bg-brand-black pt-12 pb-8 px-6 rounded-b-[3rem] shadow-xl relative z-20">
           <div className="flex items-center gap-4 mb-6">
             <button
-              onClick={() => setShowResult(false)}
-              className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white backdrop-blur-md border border-white/10"
+              onClick={() => setActiveTab('scan')}
+              className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white backdrop-blur-md border border-white/10 active:scale-95 transition-transform"
             >
               <ArrowLeft size={20} />
             </button>
@@ -190,7 +228,7 @@ const Traceability = () => {
           </div>
 
           <Button
-            className="w-full h-14 rounded-2xl bg-brand-black dark:bg-brand-gold text-brand-gold dark:text-brand-black font-bold gap-3 my-8 border-none shadow-xl"
+            className="w-full h-14 rounded-2xl bg-brand-black dark:bg-brand-gold text-brand-gold dark:text-brand-black font-bold gap-3 my-8 border-none shadow-xl active:scale-95 transition-transform"
             onClick={() => window.print()}
           >
             Download Health Certificate
@@ -207,44 +245,86 @@ const Traceability = () => {
           Traceability
         </h1>
         <p className="text-slate-400 text-sm mb-0">
-          Every bird has a story. Find out where yours came from.
+          Every bird has a story. Scan to verify yours.
         </p>
       </div>
 
       <div className="px-6 -mt-6 relative z-30">
-        <div className="bg-card rounded-[2.5rem] p-8 shadow-xl border border-border text-center">
-          <div className="relative w-full aspect-square max-w-[240px] mx-auto mb-8 group">
-            <div className="absolute inset-0 bg-brand-gold/10 rounded-[3rem] animate-pulse" />
-            <div className="absolute inset-4 border-2 border-dashed border-brand-gold/30 rounded-[2rem] flex flex-col items-center justify-center bg-card">
-              <QrCode
-                size={100}
-                className="text-brand-gold opacity-40 mb-4 group-hover:scale-110 transition-transform duration-500"
-              />
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                Position QR here
-              </p>
+        <div className="bg-card rounded-[2.5rem] p-8 shadow-xl border border-border text-center overflow-hidden">
+          {!isCameraActive ? (
+            <div className="relative w-full aspect-square max-w-[240px] mx-auto mb-8 group">
+              <div className="absolute inset-0 bg-brand-gold/10 rounded-[3rem] animate-pulse" />
+              <div className="absolute inset-4 border-2 border-dashed border-brand-gold/30 rounded-[2rem] flex flex-col items-center justify-center bg-card">
+                <QrCode
+                  size={100}
+                  className="text-brand-gold opacity-40 mb-4 group-hover:scale-110 transition-transform duration-500"
+                />
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Position QR here</p>
+              </div>
+              
+              <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-brand-gold rounded-tl-2xl" />
+              <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-brand-gold rounded-tr-2xl" />
+              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-brand-gold rounded-bl-2xl" />
+              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-brand-gold rounded-br-2xl" />
             </div>
+          ) : (
+            <div className="relative w-full aspect-square max-w-[240px] mx-auto mb-8 overflow-hidden rounded-[3rem] bg-black">
+              <video 
+                ref={videoRef} 
+                autoPlay 
+                playsInline 
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 border-2 border-brand-gold rounded-[3rem] pointer-events-none" />
+              <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-brand-gold/50 shadow-[0_0_15px_rgba(212,175,55,0.8)] animate-[scan_2s_ease-in-out_infinite]" />
+              
+              <button 
+                onClick={handleSimulatedScan}
+                className="absolute inset-0 flex items-center justify-center bg-black/40 text-white font-black uppercase text-[10px] tracking-widest opacity-0 hover:opacity-100 transition-opacity"
+              >
+                Tap to Scan Batch
+              </button>
 
-            {/* Corner Accents */}
-            <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-brand-gold rounded-tl-2xl" />
-            <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-brand-gold rounded-tr-2xl" />
-            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-brand-gold rounded-bl-2xl" />
-            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-brand-gold rounded-br-2xl" />
-          </div>
+              <button 
+                onClick={stopCamera}
+                className="absolute top-4 right-4 w-8 h-8 bg-black/50 rounded-full flex items-center justify-center text-white backdrop-blur-md"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
 
           <div className="space-y-4">
-            <Button
-              onClick={handleScan}
-              className="w-full h-14 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-bold text-base shadow-xl shadow-brand-gold/20"
-            >
-              Scan Now
-            </Button>
-
+            {!isCameraActive ? (
+              <Button 
+                onClick={startCamera}
+                className="w-full h-14 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-bold text-base shadow-xl shadow-brand-gold/20 active:scale-95 transition-transform"
+              >
+                <Camera size={20} className="mr-2" />
+                Scan Now
+              </Button>
+            ) : (
+              <div className="flex gap-3">
+                <Button 
+                  onClick={handleSimulatedScan}
+                  className="flex-1 h-14 rounded-2xl bg-brand-gold text-brand-black font-bold border-none"
+                >
+                  <Zap size={18} fill="currentColor" className="mr-2" />
+                  Capture
+                </Button>
+                <Button 
+                  onClick={stopCamera}
+                  variant="outline"
+                  className="w-14 h-14 rounded-2xl border-border bg-muted/30"
+                >
+                  <RefreshCcw size={20} className="text-muted-foreground" />
+                </Button>
+              </div>
+            )}
+            
             <div className="flex items-center gap-4 py-2">
               <div className="h-[1px] flex-1 bg-border" />
-              <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
-                Or enter code
-              </span>
+              <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Or enter code</span>
               <div className="h-[1px] flex-1 bg-border" />
             </div>
 
@@ -253,12 +333,17 @@ const Traceability = () => {
                 value={batchId}
                 onChange={(e) => setBatchId(e.target.value)}
                 placeholder="Ex: KP-JH-9021"
-                className="h-14 rounded-2xl border-border bg-muted/30 font-display font-bold text-center uppercase"
+                className="h-14 rounded-2xl border-border bg-muted/30 font-display font-bold text-center uppercase focus-visible:ring-brand-gold text-foreground"
               />
               <Button
-                onClick={handleScan}
+                onClick={() => {
+                  if (batchId) {
+                    setActiveTab('result');
+                    showSuccess("Batch verified!");
+                  }
+                }}
                 disabled={!batchId}
-                className="h-14 w-14 rounded-2xl bg-brand-black text-brand-gold shrink-0"
+                className="h-14 w-14 rounded-2xl bg-brand-black dark:bg-brand-gold text-brand-gold dark:text-brand-black shrink-0 border-none active:scale-95 transition-transform"
               >
                 <ChevronRight size={24} />
               </Button>
@@ -267,29 +352,30 @@ const Traceability = () => {
         </div>
 
         <div className="mt-8 mb-12">
-          <h3 className="text-lg font-display font-bold text-foreground mb-4">
-            Certified Safe
-          </h3>
+          <h3 className="text-lg font-display font-bold text-foreground mb-4">Certified Safe</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-card p-4 rounded-[2rem] border border-border flex flex-col items-center text-center">
               <div className="w-10 h-10 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500 mb-3">
                 <CheckCircle2 size={24} />
               </div>
-              <p className="text-[10px] font-black uppercase text-foreground">
-                Antibiotic Free
-              </p>
+              <p className="text-[10px] font-black uppercase text-foreground">Antibiotic Free</p>
             </div>
             <div className="bg-card p-4 rounded-[2rem] border border-border flex flex-col items-center text-center">
               <div className="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-500 mb-3">
                 <CheckCircle2 size={24} />
               </div>
-              <p className="text-[10px] font-black uppercase text-foreground">
-                100% Organic
-              </p>
+              <p className="text-[10px] font-black uppercase text-foreground">100% Organic</p>
             </div>
           </div>
         </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes scan {
+          0%, 100% { top: 10%; opacity: 0.2; }
+          50% { top: 90%; opacity: 0.8; }
+        }
+      `}</style>
     </MobileLayout>
   );
 };
