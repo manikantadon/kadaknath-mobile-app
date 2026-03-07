@@ -26,11 +26,17 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Strategy
+// Fetch Strategy (Network first for dev, fallback to cache)
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
+    fetch(event.request).catch(() => caches.match(event.request))
+  );
+});
+
+// Handle Notification Clicks
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.openWindow('/customer/notifications')
   );
 });

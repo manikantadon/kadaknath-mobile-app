@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Package, Calendar, Tag, Bell, Info } from 'lucide-react';
 
 export type NotificationType = 'order' | 'subscription' | 'offer' | 'system';
 
@@ -31,7 +30,6 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [permission, setPermission] = useState<NotificationPermission>('default');
 
-  // Load from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('kadaknath_notifications');
     if (saved) {
@@ -42,7 +40,6 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  // Save to localStorage on change
   useEffect(() => {
     localStorage.setItem('kadaknath_notifications', JSON.stringify(notifications));
   }, [notifications]);
@@ -53,7 +50,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     setPermission(result);
   };
 
-  const addNotification = (notif: Omit<Notification, 'id' | 'isRead' | 'timestamp' | 'time'>) => {
+  const addNotification = async (notif: Omit<Notification, 'id' | 'isRead' | 'timestamp' | 'time'>) => {
     const newNotif: Notification = {
       ...notif,
       id: Math.random().toString(36).substr(2, 9),
@@ -64,11 +61,16 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
     setNotifications(prev => [newNotif, ...prev]);
 
-    // Trigger Browser Notification
-    if (permission === 'granted') {
-      new Notification(newNotif.title, {
+    // Trigger Real Mobile/PWA Notification via Service Worker
+    if (permission === 'granted' && 'serviceWorker' in navigator) {
+      const registration = await navigator.serviceWorker.ready;
+      registration.showNotification(newNotif.title, {
         body: newNotif.description,
-        icon: '/logo.svg'
+        icon: '/logo.svg',
+        badge: '/logo.svg',
+        vibrate: [200, 100, 200],
+        tag: newNotif.id,
+        data: { url: '/customer/notifications' }
       });
     }
   };
