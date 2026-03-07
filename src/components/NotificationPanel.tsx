@@ -12,6 +12,7 @@ import {
 import { Bell, Package, Calendar, Tag, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export const MOCK_NOTIFICATIONS = [
   { 
@@ -57,19 +58,29 @@ export const MOCK_NOTIFICATIONS = [
     icon: Tag,
     color: 'text-emerald-500',
     bg: 'bg-emerald-50'
+  },
+  { 
+    id: '5', 
+    title: 'Feedback Requested', 
+    description: 'How was your last delivery?', 
+    time: '2 days ago',
+    isRead: true,
+    type: 'order',
+    icon: Package,
+    color: 'text-indigo-500',
+    bg: 'bg-indigo-50'
   }
 ];
 
 const NotificationPanel = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
-  const latestNotifications = MOCK_NOTIFICATIONS.slice(0, 3);
 
   return (
     <Drawer>
       <DrawerTrigger asChild>
         {children}
       </DrawerTrigger>
-      <DrawerContent className="bg-brand-offwhite border-none rounded-t-[3rem] max-w-md mx-auto">
+      <DrawerContent className="bg-brand-offwhite border-none rounded-t-[3rem] max-w-md mx-auto h-[80vh]">
         <div className="mx-auto w-12 h-1.5 bg-slate-200 rounded-full mt-4 mb-2" />
         <DrawerHeader className="px-6">
           <div className="flex items-center gap-2">
@@ -78,27 +89,29 @@ const NotificationPanel = ({ children }: { children: React.ReactNode }) => {
           </div>
         </DrawerHeader>
 
-        <div className="px-6 py-4 space-y-4">
-          {latestNotifications.map((notif) => (
-            <button 
-              key={notif.id}
-              onClick={() => navigate(`/customer/orders`)} // Simplified for demo
-              className="w-full flex items-start gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm text-left group transition-all active:scale-95"
-            >
-              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", notif.bg, notif.color)}>
-                <notif.icon size={20} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-start mb-1">
-                  <h4 className="font-bold text-brand-black text-sm truncate">{notif.title}</h4>
-                  {!notif.isRead && <span className="w-2 h-2 bg-brand-red rounded-full mt-1.5" />}
+        <ScrollArea className="flex-1 px-6 py-4">
+          <div className="space-y-4 pb-6">
+            {MOCK_NOTIFICATIONS.map((notif) => (
+              <button 
+                key={notif.id}
+                onClick={() => navigate(`/customer/orders`)}
+                className="w-full flex items-start gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm text-left group transition-all active:scale-95"
+              >
+                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", notif.bg, notif.color)}>
+                  <notif.icon size={20} />
                 </div>
-                <p className="text-xs text-slate-500 line-clamp-2 mb-1">{notif.description}</p>
-                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">{notif.time}</span>
-              </div>
-            </button>
-          ))}
-        </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start mb-1">
+                    <h4 className="font-bold text-brand-black text-sm truncate">{notif.title}</h4>
+                    {!notif.isRead && <span className="w-2 h-2 bg-brand-red rounded-full mt-1.5" />}
+                  </div>
+                  <p className="text-xs text-slate-500 line-clamp-2 mb-1">{notif.description}</p>
+                  <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">{notif.time}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </ScrollArea>
 
         <DrawerFooter className="px-6 pb-10">
           <button 
