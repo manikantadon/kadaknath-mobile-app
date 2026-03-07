@@ -15,6 +15,7 @@ export interface Product {
   };
   rating?: number;
   reviews?: number;
+  popularity?: number; // For sorting
 }
 
 export const PRODUCTS: Product[] = [
@@ -28,6 +29,7 @@ export const PRODUCTS: Product[] = [
     description: 'Our signature Kadaknath chicken is raised in a stress-free environment, fed with organic grains, and aged to perfection for the most authentic flavor and medicinal properties.',
     rating: 4.9,
     reviews: 128,
+    popularity: 98,
     nutrition: [
       { label: 'Protein', value: '25g' },
       { label: 'Fat', value: '0.73%' },
@@ -51,6 +53,7 @@ export const PRODUCTS: Product[] = [
     description: 'Perfectly sized curry cuts from premium Kadaknath chicken. High in protein and iron, ideal for traditional recipes.',
     rating: 4.8,
     reviews: 95,
+    popularity: 85,
     nutrition: [
       { label: 'Protein', value: '24g' },
       { label: 'Fat', value: '0.75%' },
@@ -73,6 +76,7 @@ export const PRODUCTS: Product[] = [
     description: 'Nutrient-dense black Kadaknath eggs. Known for their high protein content and traditional health benefits.',
     rating: 4.7,
     reviews: 210,
+    popularity: 92,
     nutrition: [
       { label: 'Protein', value: '6g/egg' },
       { label: 'Fat', value: 'Low' },
@@ -95,6 +99,7 @@ export const PRODUCTS: Product[] = [
     description: 'Lean and tender Kadaknath breast fillets. The healthiest cut for fitness enthusiasts and gourmet cooking.',
     rating: 4.9,
     reviews: 64,
+    popularity: 78,
     nutrition: [
       { label: 'Protein', value: '27g' },
       { label: 'Fat', value: '0.65%' },
@@ -117,6 +122,7 @@ export const PRODUCTS: Product[] = [
     description: 'A luxurious assortment of premium Kadaknath products including whole cuts and gourmet seasoning. Perfect for health-conscious friends and family.',
     rating: 5.0,
     reviews: 12,
+    popularity: 45,
     nutrition: [
       { label: 'Protein', value: 'Mixed' },
       { label: 'Contents', value: 'Premium' },
@@ -126,6 +132,98 @@ export const PRODUCTS: Product[] = [
     farm: {
       name: 'Kadaknath Pro Selection',
       location: 'Curated',
+      certified: true
+    }
+  },
+  { 
+    id: '6', 
+    name: 'Chicken Lollipop (10 pcs)', 
+    price: 850, 
+    unit: 'pack', 
+    image: 'https://images.unsplash.com/photo-1567622345638-73e6eb82af9b?auto=format&fit=crop&q=80&w=800', 
+    category: 'Cuts',
+    description: 'Frenched chicken wings shaped into lollipops. Perfect for parties and appetizers.',
+    rating: 4.6,
+    reviews: 42,
+    popularity: 60,
+    nutrition: [
+      { label: 'Protein', value: '22g' },
+      { label: 'Fat', value: '1.2%' },
+      { label: 'Flavor', value: 'Intense' },
+      { label: 'Iron', value: 'High' },
+    ],
+    farm: {
+      name: 'Sun-Kissed Poultry',
+      location: 'Dhar, MP',
+      certified: true
+    }
+  },
+  { 
+    id: '7', 
+    name: 'Drumsticks (Premium)', 
+    price: 950, 
+    unit: 'kg', 
+    image: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&q=80&w=800', 
+    category: 'Cuts',
+    description: 'Juicy and flavorful drumsticks from free-range Kadaknath chickens. Rich in minerals and protein.',
+    rating: 4.8,
+    reviews: 88,
+    popularity: 82,
+    nutrition: [
+      { label: 'Protein', value: '23g' },
+      { label: 'Iron', value: 'High' },
+      { label: 'Collagen', value: 'Rich' },
+      { label: 'Fat', value: 'Low' },
+    ],
+    farm: {
+      name: 'Premium Roots Farm',
+      location: 'Indore, MP',
+      certified: true
+    }
+  },
+  { 
+    id: '8', 
+    name: 'Kadaknath Ghee (250ml)', 
+    price: 1800, 
+    unit: 'bottle', 
+    image: 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?auto=format&fit=crop&q=80&w=800', 
+    category: 'Gifts',
+    description: 'Ultra-rare medicinal ghee prepared from Kadaknath nutrients. Used in traditional Ayurvedic preparations.',
+    rating: 4.9,
+    reviews: 15,
+    popularity: 30,
+    nutrition: [
+      { label: 'Vitamins', value: 'A, D, E, K' },
+      { label: 'CLA', value: 'High' },
+      { label: 'Purity', value: '100%' },
+      { label: 'Benefit', value: 'Healing' },
+    ],
+    farm: {
+      name: 'Green Valley Organic Farm',
+      location: 'Jhabua, MP',
+      certified: true
+    }
+  },
+  { 
+    id: '9', 
+    name: 'Bulk Eggs Tray', 
+    price: 1100, 
+    unit: '30 pcs', 
+    image: 'https://images.unsplash.com/photo-1506976785307-8732e854ad03?auto=format&fit=crop&q=80&w=800', 
+    category: 'Eggs',
+    description: 'Value pack of 30 authentic Kadaknath eggs. Perfect for large families and fitness enthusiasts.',
+    rating: 4.7,
+    reviews: 56,
+    popularity: 70,
+    nutrition: [
+      { label: 'Protein', value: '180g total' },
+      { label: 'Iron', value: 'Extreme' },
+      { label: 'Shelf Life', value: '21 days' },
+      { label: 'Grade', value: 'AA' },
+    ],
+    farm: {
+      name: 'Sun-Kissed Poultry',
+      location: 'Dhar, MP',
       certified: true
     }
   },

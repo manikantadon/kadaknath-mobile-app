@@ -77,7 +77,7 @@ const MobileLayout = ({ children, role }: MobileLayoutProps) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-brand-offwhite max-w-md mx-auto border-x border-slate-200 shadow-2xl overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-background text-foreground max-w-md mx-auto border-x border-slate-200 dark:border-white/5 shadow-2xl overflow-hidden">
       <main 
         className="flex-1 overflow-y-auto pb-24 select-none"
         onClick={handleDoubleClick}
@@ -85,7 +85,7 @@ const MobileLayout = ({ children, role }: MobileLayoutProps) => {
         {children}
       </main>
       
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-brand-black border-t border-brand-gold/20 px-6 py-4 flex justify-between items-center z-50 rounded-t-[2rem]">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-brand-black dark:bg-card border-t border-brand-gold/20 px-6 py-4 flex justify-between items-center z-50 rounded-t-[2rem]">
         {currentNav.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -94,7 +94,7 @@ const MobileLayout = ({ children, role }: MobileLayoutProps) => {
               to={item.path}
               className={cn(
                 "flex flex-col items-center gap-1 transition-all duration-300",
-                isActive ? "text-brand-gold scale-110" : "text-slate-500 hover:text-slate-300"
+                isActive ? "text-brand-gold scale-110" : "text-slate-500 dark:text-slate-400 hover:text-slate-300"
               )}
             >
               <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />

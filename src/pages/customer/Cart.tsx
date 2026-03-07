@@ -2,18 +2,69 @@
 
 import React, { useState } from 'react';
 import MobileLayout from '@/components/MobileLayout';
-import { ChevronLeft, Trash2, Plus, Minus, CreditCard, MapPin, ChevronRight, Sparkles } from 'lucide-react';
+import { ChevronLeft, Trash2, Plus, Minus, CreditCard, MapPin, ChevronRight, Sparkles, Check, Navigation, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { showSuccess } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+
+const ADDRESSES = [
+  { id: '1', label: 'Home', address: 'Sector 45, Gurgaon, HR 122003', isDefault: true },
+  { id: '2', label: 'Office', address: 'Unitech Cyber Park, Sector 39, Gurgaon', isDefault: false },
+];
 
 const Cart = () => {
   const navigate = useNavigate();
+  const [address, setAddress] = useState(ADDRESSES[0]);
+  const [isAddressDrawerOpen, setIsAddressDrawerOpen] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
   const [items, setItems] = useState([
     { id: '1', name: 'Premium Kadaknath Whole', price: 1200, qty: 1, image: 'https://images.unsplash.com/photo-1587593810167-a84920ea0781?auto=format&fit=crop&q=80&w=200' },
     { id: '2', name: 'Kadaknath Eggs (Case)', price: 450, qty: 2, image: 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&q=80&w=200' },
   ]);
+
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      showError("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsLocating(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          // Using OpenStreetMap Nominatim (Free, No API Key required for demo)
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          );
+          const data = await response.json();
+          
+          if (data && data.display_name) {
+            const newAddress = {
+              id: 'current',
+              label: 'Current Location',
+              address: data.display_name,
+              isDefault: false
+            };
+            setAddress(newAddress);
+            setIsAddressDrawerOpen(false);
+            showSuccess("Location updated successfully! 📍");
+          }
+        } catch (err) {
+          showError("Failed to fetch address details");
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (error) => {
+        setIsLocating(false);
+        showError("Permission denied or location unavailable");
+      }
+    );
+  };
 
   const subtotal = items.reduce((acc, item) => acc + (item.price * item.qty), 0);
   const delivery = 50;
@@ -82,18 +133,93 @@ const Cart = () => {
 
             {/* Delivery Info */}
             <div className="space-y-3 mb-8">
-              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold">
-                    <MapPin size={20} />
+              <Drawer open={isAddressDrawerOpen} onOpenChange={setIsAddressDrawerOpen}>
+                <DrawerTrigger asChild>
+                  <button className="w-full text-left bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between active:scale-[0.98] transition-transform">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold">
+                        <MapPin size={20} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Delivery Address</p>
+                        <p className="text-xs font-bold text-brand-black truncate max-w-[180px]">
+                          {address.label}: {address.address}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] font-black uppercase text-brand-gold">Change</span>
+                      <ChevronRight size={18} className="text-slate-300" />
+                    </div>
+                  </button>
+                </DrawerTrigger>
+                <DrawerContent className="bg-brand-offwhite border-none rounded-t-[3rem]">
+                  <div className="mx-auto w-12 h-1.5 bg-slate-200 rounded-full mt-4 mb-6" />
+                  <DrawerHeader className="px-8 text-left">
+                    <DrawerTitle className="text-2xl font-display font-bold text-brand-black">Select Address</DrawerTitle>
+                    <p className="text-sm text-slate-400">Choose where you want your order delivered.</p>
+                  </DrawerHeader>
+                  <div className="p-8 space-y-4">
+                    <Button 
+                      onClick={handleGetCurrentLocation}
+                      disabled={isLocating}
+                      className="w-full h-14 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-black gap-3 shadow-lg shadow-brand-gold/20 mb-2 border-none"
+                    >
+                      {isLocating ? (
+                        <Loader2 size={20} className="animate-spin" />
+                      ) : (
+                        <Navigation size={20} fill="currentColor" />
+                      )}
+                      {isLocating ? 'Fetching Location...' : 'Use Current Location'}
+                    </Button>
+
+                    <div className="flex items-center gap-4 my-6">
+                      <div className="h-[1px] flex-1 bg-slate-100" />
+                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Or Select Saved</span>
+                      <div className="h-[1px] flex-1 bg-slate-100" />
+                    </div>
+
+                    {ADDRESSES.map((addr) => (
+                      <button
+                        key={addr.id}
+                        onClick={() => {
+                          setAddress(addr);
+                          setIsAddressDrawerOpen(false);
+                          showSuccess(`Address changed to ${addr.label}`);
+                        }}
+                        className={`w-full p-5 rounded-[2rem] border text-left transition-all flex justify-between items-center ${
+                          address.id === addr.id 
+                            ? 'bg-brand-black border-brand-black text-white shadow-xl shadow-black/10' 
+                            : 'bg-white border-slate-100 text-brand-black hover:border-brand-gold/50'
+                        }`}
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold text-sm">{addr.label}</span>
+                            {addr.isDefault && (
+                              <span className={`text-[8px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-full ${
+                                address.id === addr.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'
+                              }`}>Default</span>
+                            )}
+                          </div>
+                          <p className={`text-xs ${address.id === addr.id ? 'text-slate-400' : 'text-slate-500'}`}>
+                            {addr.address}
+                          </p>
+                        </div>
+                        {address.id === addr.id && (
+                          <div className="w-8 h-8 bg-brand-gold rounded-full flex items-center justify-center text-brand-black">
+                            <Check size={16} strokeWidth={3} />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                    <Button variant="outline" className="w-full h-14 rounded-2xl border-dashed border-slate-200 text-slate-400 font-bold gap-2">
+                      <Plus size={18} />
+                      Add New Address
+                    </Button>
                   </div>
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Delivery Address</p>
-                    <p className="text-xs font-bold text-brand-black">Sector 45, Gurgaon...</p>
-                  </div>
-                </div>
-                <ChevronRight size={18} className="text-slate-300" />
-              </div>
+                </DrawerContent>
+              </Drawer>
 
               <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
                 <div className="flex items-center gap-3">
