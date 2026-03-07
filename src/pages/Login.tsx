@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
+import { haptics } from '@/utils/haptics';
 
 interface LoginForm {
   username: string;
@@ -32,8 +33,8 @@ const Login = () => {
     // Dummy authentication logic
     setTimeout(() => {
       const validUsers = ['admin', 'customer', 'driver'];
-      
       if (data.password === '12345678' && validUsers.includes(data.username)) {
+        haptics.success();
         if (data.username === 'admin') {
           showSuccess('Welcome back, Administrator');
           navigate('/admin');
@@ -45,6 +46,8 @@ const Login = () => {
           navigate('/driver');
         }
       } else {
+        haptics.error();
+        // Generic error message for security
         showError('Invalid username or password');
       }
       setIsLoading(false);

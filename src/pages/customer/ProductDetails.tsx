@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { showSuccess } from '@/utils/toast';
 import { PRODUCTS } from '@/lib/products';
+import { haptics } from '@/utils/haptics';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -192,6 +193,7 @@ const ProductDetails = () => {
             <div className="flex gap-3">
               <Button 
                 onClick={() => {
+                  haptics.success();
                   showSuccess(`${quantity} item(s) added to cart!`);
                   navigate('/customer/cart');
                 }}
@@ -203,6 +205,7 @@ const ProductDetails = () => {
               </Button>
               <Button 
                 onClick={() => {
+                  haptics.impact();
                   showSuccess('Proceeding to quick checkout...');
                   navigate('/customer/cart');
                 }}
