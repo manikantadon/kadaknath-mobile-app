@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import MobileLayout from '@/components/MobileLayout';
 import ProductCard from '@/components/ProductCard';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { PRODUCTS } from '@/lib/products';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import LoadingScreen from '@/components/ui/loading-screen';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,14 @@ const ProductList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState(location.state?.category || 'All');
   const [sortBy, setSortBy] = useState('popularity');
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Simulate search/filter delay for better UX feel
+  useEffect(() => {
+    setIsSearching(true);
+    const timer = setTimeout(() => setIsSearching(false), 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery, activeCategory, sortBy]);
 
   const filteredProducts = useMemo(() => {
     let result = PRODUCTS.filter(product => {
@@ -123,35 +132,41 @@ const ProductList = () => {
           </DropdownMenu>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <AnimatePresence mode="popLayout">
-            {filteredProducts.map((product) => (
-              <motion.div
-                key={product.id}
-                layout
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ 
-                  layout: { type: "spring", stiffness: 300, damping: 30 },
-                  opacity: { duration: 0.2 },
-                  scale: { duration: 0.2 }
-                }}
-              >
-                <ProductCard product={product} />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-20">
-            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Filter size={32} className="text-slate-200" />
+        {isSearching ? (
+          <LoadingScreen fullScreen={false} />
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <AnimatePresence mode="popLayout">
+                {filteredProducts.map((product) => (
+                  <motion.div
+                    key={product.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ 
+                      layout: { type: "spring", stiffness: 300, damping: 30 },
+                      opacity: { duration: 0.2 },
+                      scale: { duration: 0.2 }
+                    }}
+                  >
+                    <ProductCard product={product} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
-            <h3 className="font-bold text-brand-black mb-1">No products found</h3>
-            <p className="text-sm text-slate-400">Try adjusting your filters or search terms.</p>
-          </div>
+
+            {filteredProducts.length === 0 && (
+              <div className="text-center py-20">
+                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Filter size={32} className="text-slate-200" />
+                </div>
+                <h3 className="font-bold text-brand-black mb-1">No products found</h3>
+                <p className="text-sm text-slate-400">Try adjusting your filters or search terms.</p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </MobileLayout>

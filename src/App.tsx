@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,7 +6,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { NotificationProvider } from "./context/NotificationContext";
 import { ThemeProvider } from "./components/theme-provider";
+import LoadingScreen from "@/components/ui/loading-screen";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import CustomerHome from "./pages/customer/Home";
@@ -24,44 +27,57 @@ import DriverProfile from "./pages/driver/Profile";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="light" storageKey="kadaknath-theme" attribute="class">
-      <NotificationProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Login />} />
-              <Route path="/selector" element={<Index />} />
-              
-              {/* Customer Routes */}
-              <Route path="/customer" element={<CustomerHome />} />
-              <Route path="/customer/products" element={<ProductList />} />
-              <Route path="/customer/product/:id" element={<ProductDetails />} />
-              <Route path="/customer/cart" element={<Cart />} />
-              <Route path="/customer/trace" element={<Traceability />} />
-              <Route path="/customer/orders" element={<CustomerOrders />} />
-              <Route path="/customer/profile" element={<Profile />} />
-              <Route path="/customer/notifications" element={<Notifications />} />
+const App = () => {
+  const [isLoading, setIsLoading] = useState(true);
 
-              {/* Admin Routes */}
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/orders" element={<AdminOrders />} />
-              <Route path="/admin/staff" element={<AdminStaff />} />
+  useEffect(() => {
+    // Simulate initial app loading/hydration
+    const timer = setTimeout(() => setIsLoading(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
-              {/* Driver Routes */}
-              <Route path="/driver" element={<DriverDeliveries />} />
-              <Route path="/driver/profile" element={<DriverProfile />} />
+  if (isLoading) return <LoadingScreen />;
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </NotificationProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="light" storageKey="kadaknath-theme" attribute="class">
+        <NotificationProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/selector" element={<Index />} />
+
+                {/* Customer Routes */}
+                <Route path="/customer" element={<CustomerHome />} />
+                <Route path="/customer/products" element={<ProductList />} />
+                <Route path="/customer/product/:id" element={<ProductDetails />} />
+                <Route path="/customer/cart" element={<Cart />} />
+                <Route path="/customer/trace" element={<Traceability />} />
+                <Route path="/customer/orders" element={<CustomerOrders />} />
+                <Route path="/customer/profile" element={<Profile />} />
+                <Route path="/customer/notifications" element={<Notifications />} />
+
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/orders" element={<AdminOrders />} />
+                <Route path="/admin/staff" element={<AdminStaff />} />
+
+                {/* Driver Routes */}
+                <Route path="/driver" element={<DriverDeliveries />} />
+                <Route path="/driver/profile" element={<DriverProfile />} />
+
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </NotificationProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
