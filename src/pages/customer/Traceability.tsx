@@ -93,44 +93,55 @@ const Traceability = () => {
   const streamRef = useRef<MediaStream | null>(null);
 
   const startCamera = async () => {
+    // 1. Check if the context is secure (HTTPS or Localhost)
+    if (!window.isSecureContext) {
+      showError("Security Error: Camera only works on HTTPS connections.");
+      return;
+    }
+
     try {
-      // Clear any existing streams first
       stopCamera();
+      setIsCameraActive(true); // Show the UI immediately
 
-      const constraints = {
-        video: { 
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
+      // 2. Try the primary back camera first
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
         audio: false
-      };
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      });
       
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        setIsCameraActive(true);
-        
-        // Force play and handle potential autoplay blocks
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play().catch(e => console.error("Autoplay prevented:", e));
-        };
-      }
-    } catch (err) {
-      console.error("Camera Error:", err);
-      // Fallback to basic video if ideal constraints fail
+      handleStreamSuccess(stream);
+    } catch (err: any) {
+      console.error("Primary Camera Error:", err);
+      
+      // 3. Fallback to ANY available camera if back camera fails
       try {
         const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) {
-          videoRef.current.srcObject = fallbackStream;
-          streamRef.current = fallbackStream;
-          setIsCameraActive(true);
+        handleStreamSuccess(fallbackStream);
+      } catch (fallbackErr: any) {
+        setIsCameraActive(false);
+        if (fallbackErr.name === 'NotAllowedError' || fallbackErr.name === 'PermissionDeniedError') {
+          showError("Permission Denied: Please reset camera permissions in browser settings.");
+        } else if (fallbackErr.name === 'NotFoundError') {
+          showError("No Camera Found: Could not detect any camera on this device.");
+        } else {
+          showError(`Camera Error: ${fallbackErr.message || "Access failed"}`);
         }
-      } catch (fallbackErr) {
-        showError("Camera access failed. Please ensure you are on HTTPS and have given permission.");
       }
+    }
+  };
+
+  const handleStreamSuccess = (stream: MediaStream) => {
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      streamRef.current = stream;
+      
+      // Critical for Android/iOS: Ensure play is called
+      videoRef.current.onloadedmetadata = () => {
+        videoRef.current?.play().catch(e => {
+          console.error("Play error:", e);
+          showError("Tap the camera frame to start the feed.");
+        });
+      };
     }
   };
 
@@ -398,12 +409,12 @@ const Traceability = () => {
         </div>
       </div>
 
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes scan {
           0%, 100% { top: 10%; opacity: 0.2; }
           50% { top: 90%; opacity: 0.8; }
         }
-      `}</style>
+      `}} />
     </MobileLayout>
   );
 };
