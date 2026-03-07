@@ -9,6 +9,7 @@ import CustomerHome from "./pages/customer/Home";
 import Traceability from "./pages/customer/Traceability";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminOrders from "./pages/admin/Orders";
+import AdminStaff from "./pages/admin/Staff";
 import DriverDeliveries from "./pages/driver/Deliveries";
 
 const queryClient = new QueryClient();
@@ -31,7 +32,7 @@ const App = () => (
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
-          <Route path="/admin/staff" element={<div className="p-8">Staff Management (Coming Soon)</div>} />
+          <Route path="/admin/staff" element={<AdminStaff />} />
 
           {/* Driver Routes */}
           <Route path="/driver" element={<DriverDeliveries />} />
