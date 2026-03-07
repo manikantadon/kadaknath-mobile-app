@@ -70,6 +70,12 @@
 
   body {
     @apply bg-background text-foreground font-sans transition-colors duration-300;
+    overscroll-behavior-y: none;
+  }
+
+  html {
+    overscroll-behavior-y: none;
+    scroll-behavior: smooth;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -85,10 +91,6 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-}
-
-html {
-  scroll-behavior: smooth;
 }
 
 /* Custom scrollbar for dark mode */
