@@ -31,7 +31,10 @@ const Login = () => {
 
     // Dummy authentication logic
     setTimeout(() => {
-      if (data.password === '12345678') {
+      const validUsers = ['admin', 'customer', 'driver'];
+      
+      // Check both username and password together to prevent enumeration
+      if (data.password === '12345678' && validUsers.includes(data.username)) {
         if (data.username === 'admin') {
           showSuccess('Welcome back, Administrator');
           navigate('/admin');
@@ -41,11 +44,10 @@ const Login = () => {
         } else if (data.username === 'driver') {
           showSuccess('Ready for deliveries?');
           navigate('/driver');
-        } else {
-          showError('Invalid username. Use admin, customer, or driver.');
         }
       } else {
-        showError('Incorrect password. Try 12345678');
+        // Generic error message for security
+        showError('Invalid username or password');
       }
       setIsLoading(false);
     }, 1000);
@@ -83,7 +85,7 @@ const Login = () => {
                 <Input 
                   {...register("username", { required: "Username is required" })}
                   type="text"
-                  placeholder="admin, customer, or driver"
+                  placeholder="Enter your username"
                   className={cn(
                     "pl-11 h-14 rounded-2xl border-slate-100 bg-slate-50 focus-visible:ring-brand-gold transition-all",
                     errors.username && "border-brand-red/50 bg-brand-red/5 focus-visible:ring-brand-red"
