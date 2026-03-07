@@ -2,12 +2,14 @@
 
 import React, { useState } from 'react';
 import MobileLayout from '@/components/MobileLayout';
-import { Search, Filter, ChevronRight, Clock, CheckCircle2, Truck, AlertCircle } from 'lucide-react';
+import { Search, Filter, ChevronRight, Clock, CheckCircle2, Truck, AlertCircle, LogOut } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
+import { showSuccess } from '@/utils/toast';
 
 const ORDERS = [
   { id: 'ORD-7721', customer: 'Rahul S.', items: '2.5kg Curry Cut', total: 3375, status: 'pending', time: '10 mins ago', address: 'Sector 45, Gurgaon' },
@@ -17,6 +19,7 @@ const ORDERS = [
 ];
 
 const AdminOrders = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
 
   const filteredOrders = ORDERS.filter(order => 
@@ -41,12 +44,26 @@ const AdminOrders = () => {
     }
   };
 
+  const handleLogout = () => {
+    showSuccess('Logged out successfully');
+    navigate('/');
+  };
+
   return (
     <MobileLayout role="admin">
       <div className="px-6 pt-8">
-        <header className="mb-6">
-          <h1 className="text-2xl font-black text-slate-900 mb-1">Order Management</h1>
-          <p className="text-slate-500 text-sm">Track and assign customer orders</p>
+        <header className="mb-6 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 mb-1">Order Management</h1>
+            <p className="text-slate-500 text-sm">Track and assign customer orders</p>
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:text-brand-red hover:bg-brand-red/5 transition-colors"
+            title="Logout"
+          >
+            <LogOut size={18} />
+          </button>
         </header>
 
         <div className="relative mb-6">

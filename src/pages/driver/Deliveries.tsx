@@ -2,12 +2,14 @@
 
 import React, { useState } from 'react';
 import MobileLayout from '@/components/MobileLayout';
-import { MapPin, Phone, CheckCircle, Navigation, Key } from 'lucide-react';
+import { MapPin, Phone, CheckCircle, Navigation, Key, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { showSuccess } from '@/utils/toast';
+import { useNavigate } from 'react-router-dom';
 
 const DriverDeliveries = () => {
+  const navigate = useNavigate();
   const [showOtp, setShowOtp] = useState<string | null>(null);
 
   const deliveries = [
@@ -15,11 +17,27 @@ const DriverDeliveries = () => {
     { id: 'ORD-7718', customer: 'Priya K.', address: 'DLF Phase 3, Gurgaon', phone: '+91 99887 76655', items: '1kg Whole Chicken' },
   ];
 
+  const handleLogout = () => {
+    showSuccess('Logged out successfully');
+    navigate('/');
+  };
+
   return (
     <MobileLayout role="driver">
       <div className="px-6 pt-8">
-        <h1 className="text-2xl font-black text-slate-900 mb-2">My Deliveries</h1>
-        <p className="text-slate-500 text-sm mb-8">You have {deliveries.length} pending deliveries today.</p>
+        <header className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 mb-2">My Deliveries</h1>
+            <p className="text-slate-500 text-sm">You have {deliveries.length} pending deliveries today.</p>
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:text-brand-red hover:bg-brand-red/5 transition-colors"
+            title="Logout"
+          >
+            <LogOut size={18} />
+          </button>
+        </header>
 
         <div className="space-y-6">
           {deliveries.map((delivery) => (

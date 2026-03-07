@@ -2,16 +2,25 @@
 
 import React from 'react';
 import MobileLayout from '@/components/MobileLayout';
-import { Package, TrendingUp, Users, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Package, TrendingUp, Users, AlertCircle, CheckCircle2, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
+import { showSuccess } from '@/utils/toast';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
+
   const stats = [
     { label: 'Active Orders', value: '24', icon: Package, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Revenue Today', value: '₹18.4k', icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
     { label: 'New Customers', value: '12', icon: Users, color: 'text-violet-600', bg: 'bg-violet-50' },
   ];
+
+  const handleLogout = () => {
+    showSuccess('Logged out successfully');
+    navigate('/');
+  };
 
   return (
     <MobileLayout role="admin">
@@ -21,8 +30,17 @@ const AdminDashboard = () => {
             <h1 className="text-2xl font-black text-slate-900">Operations</h1>
             <p className="text-slate-500 text-sm">Real-time inventory & orders</p>
           </div>
-          <div className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-white font-bold">
-            AD
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-white font-bold">
+              AD
+            </div>
+            <button 
+              onClick={handleLogout}
+              className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:text-brand-red hover:bg-brand-red/5 transition-colors"
+              title="Logout"
+            >
+              <LogOut size={18} />
+            </button>
           </div>
         </header>
 

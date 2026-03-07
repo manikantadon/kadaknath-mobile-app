@@ -2,12 +2,14 @@
 
 import React, { useState } from 'react';
 import MobileLayout from '@/components/MobileLayout';
-import { Search, UserPlus, Phone, Mail, Star, Shield, Truck, MoreVertical } from 'lucide-react';
+import { Search, UserPlus, Phone, Mail, Star, Shield, Truck, MoreVertical, LogOut } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
+import { showSuccess } from '@/utils/toast';
 
 const STAFF = [
   { id: 'S-101', name: 'Suresh Kumar', role: 'driver', status: 'active', rating: 4.8, deliveries: 142, phone: '+91 98765 00101' },
@@ -17,6 +19,7 @@ const STAFF = [
 ];
 
 const AdminStaff = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
 
   const filteredStaff = STAFF.filter(member => 
@@ -31,6 +34,11 @@ const AdminStaff = () => {
     }
   };
 
+  const handleLogout = () => {
+    showSuccess('Logged out successfully');
+    navigate('/');
+  };
+
   return (
     <MobileLayout role="admin">
       <div className="px-6 pt-8">
@@ -39,9 +47,18 @@ const AdminStaff = () => {
             <h1 className="text-2xl font-black text-slate-900 mb-1">Staff Directory</h1>
             <p className="text-slate-500 text-sm">Manage your operations team</p>
           </div>
-          <button className="bg-indigo-600 text-white p-3 rounded-2xl shadow-lg shadow-indigo-100">
-            <UserPlus size={20} />
-          </button>
+          <div className="flex gap-2">
+            <button className="bg-indigo-600 text-white p-3 rounded-2xl shadow-lg shadow-indigo-100">
+              <UserPlus size={20} />
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 hover:text-brand-red hover:bg-brand-red/5 transition-colors"
+              title="Logout"
+            >
+              <LogOut size={20} />
+            </button>
+          </div>
         </header>
 
         <div className="relative mb-6">
