@@ -17,6 +17,7 @@ export interface Notification {
 interface NotificationContextType {
   notifications: Notification[];
   unreadCount: number;
+  permissionStatus: NotificationPermission;
   addNotification: (notification: Omit<Notification, 'id' | 'isRead' | 'timestamp' | 'time'>) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
@@ -28,7 +29,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [permissionStatus, setPermissionStatus] = useState<NotificationPermission>('default');
 
   useEffect(() => {
     const saved = localStorage.getItem('kadaknath_notifications');
@@ -36,7 +37,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       setNotifications(JSON.parse(saved));
     }
     if ("Notification" in window) {
-      setPermission(Notification.permission);
+      setPermissionStatus(Notification.permission);
     }
   }, []);
 
@@ -45,9 +46,22 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   }, [notifications]);
 
   const requestPermission = async () => {
-    if (!("Notification" in window)) return;
-    const result = await Notification.requestPermission();
-    setPermission(result);
+    if (!("Notification" in window)) {
+      console.warn("This browser does not support desktop notifications");
+      return;
+    }
+    
+    const permission = await Notification.requestPermission();
+    setPermissionStatus(permission);
+    
+    if (permission === 'granted') {
+      // Show a test notification immediately to confirm
+      addNotification({
+        title: 'Notifications Enabled! 🔔',
+        description: 'You will now receive real-time updates for your orders.',
+        type: 'system'
+      });
+    }
   };
 
   const addNotification = async (notif: Omit<Notification, 'id' | 'isRead' | 'timestamp' | 'time'>) => {
@@ -61,17 +75,27 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
     setNotifications(prev => [newNotif, ...prev]);
 
-    // Trigger Real Mobile/PWA Notification via Service Worker
-    if (permission === 'granted' && 'serviceWorker' in navigator) {
-      const registration = await navigator.serviceWorker.ready;
-      registration.showNotification(newNotif.title, {
-        body: newNotif.description,
-        icon: '/logo.svg',
-        badge: '/logo.svg',
-        vibrate: [200, 100, 200],
-        tag: newNotif.id,
-        data: { url: '/customer/notifications' }
-      });
+    // Trigger System Notification
+    if (permissionStatus === 'granted') {
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          registration.showNotification(newNotif.title, {
+            body: newNotif.description,
+            icon: '/logo.svg',
+            badge: '/logo.svg',
+            vibrate: [200, 100, 200],
+            tag: newNotif.id,
+            data: { url: '/customer/notifications' }
+          });
+        } catch (err) {
+          console.error("Service Worker notification failed:", err);
+          // Fallback to standard notification if SW fails
+          new Notification(newNotif.title, { body: newNotif.description, icon: '/logo.svg' });
+        }
+      } else {
+        new Notification(newNotif.title, { body: newNotif.description, icon: '/logo.svg' });
+      }
     }
   };
 
@@ -93,6 +117,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     <NotificationContext.Provider value={{ 
       notifications, 
       unreadCount, 
+      permissionStatus,
       addNotification, 
       markAsRead, 
       markAllAsRead, 

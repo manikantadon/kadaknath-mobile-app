@@ -9,10 +9,10 @@ import {
   DrawerTrigger,
   DrawerFooter
 } from '@/components/ui/drawer';
-import { Bell, Package, Calendar, Tag, ChevronRight, Info } from 'lucide-react';
+import { Bell, Package, Calendar, Tag, ChevronRight, Info, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/scroll-area';
 import { useNotifications, NotificationType } from '@/context/NotificationContext';
 
 const getIcon = (type: NotificationType) => {
@@ -26,7 +26,7 @@ const getIcon = (type: NotificationType) => {
 
 const NotificationPanel = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
-  const { notifications, markAsRead, requestPermission } = useNotifications();
+  const { notifications, markAsRead, requestPermission, permissionStatus } = useNotifications();
 
   return (
     <Drawer>
@@ -40,15 +40,37 @@ const NotificationPanel = ({ children }: { children: React.ReactNode }) => {
             <Bell size={20} className="text-brand-gold" />
             <DrawerTitle className="text-xl font-display font-bold text-brand-black">Notifications</DrawerTitle>
           </div>
-          <button 
-            onClick={requestPermission}
-            className="text-[10px] font-black text-brand-gold uppercase tracking-widest border border-brand-gold/20 px-3 py-1 rounded-full"
-          >
-            Enable Alerts
-          </button>
+          
+          {permissionStatus !== 'granted' ? (
+            <button 
+              onClick={requestPermission}
+              className="text-[10px] font-black text-brand-gold uppercase tracking-widest border border-brand-gold/20 px-3 py-1 rounded-full flex items-center gap-1 animate-pulse"
+            >
+              <ShieldAlert size={12} />
+              Enable Alerts
+            </button>
+          ) : (
+            <div className="text-[10px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1">
+              <ShieldCheck size={12} />
+              Active
+            </div>
+          )}
         </DrawerHeader>
 
         <ScrollArea className="flex-1 px-6 py-4">
+          {permissionStatus === 'default' && (
+            <div className="mb-6 p-4 bg-brand-gold/10 rounded-2xl border border-brand-gold/20">
+              <p className="text-xs font-bold text-brand-black mb-2">Don't miss your delivery!</p>
+              <p className="text-[10px] text-slate-500 mb-3">Enable system notifications to get real-time updates on your mobile device.</p>
+              <button 
+                onClick={requestPermission}
+                className="w-full py-2 bg-brand-black text-brand-gold rounded-xl text-[10px] font-black uppercase tracking-widest"
+              >
+                Allow Notifications
+              </button>
+            </div>
+          )}
+
           <div className="space-y-4 pb-6">
             {notifications.length > 0 ? (
               notifications.map((notif) => {
