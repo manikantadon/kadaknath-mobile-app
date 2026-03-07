@@ -9,16 +9,18 @@ import { Button } from '@/components/ui/button';
 import { showSuccess, showError } from '@/utils/toast';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 
-const ADDRESSES = [
+const DEFAULT_ADDRESSES = [
   { id: '1', label: 'Home', address: 'Sector 45, Gurgaon, HR 122003', isDefault: true },
   { id: '2', label: 'Office', address: 'Unitech Cyber Park, Sector 39, Gurgaon', isDefault: false },
 ];
 
 const Cart = () => {
   const navigate = useNavigate();
-  const [address, setAddress] = useState(ADDRESSES[0]);
+  const [savedAddresses, setSavedAddresses] = useState(DEFAULT_ADDRESSES);
+  const [address, setAddress] = useState(DEFAULT_ADDRESSES[0]);
   const [isAddressDrawerOpen, setIsAddressDrawerOpen] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  
   const [items, setItems] = useState([
     { id: '1', name: 'Premium Kadaknath Whole', price: 1200, qty: 1, image: 'https://images.unsplash.com/photo-1587593810167-a84920ea0781?auto=format&fit=crop&q=80&w=200' },
     { id: '2', name: 'Kadaknath Eggs (Case)', price: 450, qty: 2, image: 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&q=80&w=200' },
@@ -44,14 +46,17 @@ const Cart = () => {
           
           if (data && data.display_name) {
             const newAddress = {
-              id: 'current',
-              label: 'Current Location',
+              id: Date.now().toString(),
+              label: `Location ${savedAddresses.length + 1}`,
               address: data.display_name,
               isDefault: false
             };
+            
+            // Save to list and select it
+            setSavedAddresses(prev => [newAddress, ...prev]);
             setAddress(newAddress);
             setIsAddressDrawerOpen(false);
-            showSuccess("Location updated successfully! 📍");
+            showSuccess("New location saved and selected! 📍");
           }
         } catch (err) {
           showError("Failed to fetch address details");
@@ -179,7 +184,7 @@ const Cart = () => {
                       <div className="h-[1px] flex-1 bg-slate-100" />
                     </div>
 
-                    {ADDRESSES.map((addr) => (
+                    {savedAddresses.map((addr) => (
                       <button
                         key={addr.id}
                         onClick={() => {

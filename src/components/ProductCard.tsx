@@ -25,6 +25,9 @@ const ProductCard = ({ product }: { product: Product }) => {
           src={product.image} 
           alt={product.name} 
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/placeholder.svg';
+          }}
         />
         <div className="absolute top-3 left-3 flex flex-col gap-2">
           <Badge className="bg-brand-black dark:bg-brand-gold text-brand-gold dark:text-brand-black border-none backdrop-blur-md font-bold text-[10px] uppercase tracking-wider">

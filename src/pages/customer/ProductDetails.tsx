@@ -65,6 +65,9 @@ const ProductDetails = () => {
             src={product.image} 
             alt={product.name} 
             className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/placeholder.svg';
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-brand-offwhite" />
           

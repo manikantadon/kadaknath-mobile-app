@@ -79,7 +79,7 @@ const MobileLayout = ({ children, role }: MobileLayoutProps) => {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground max-w-md mx-auto border-x border-slate-200 dark:border-white/5 shadow-2xl overflow-hidden">
       <main 
-        className="flex-1 overflow-y-auto pb-24 select-none"
+        className="flex-1 overflow-y-auto pb-24 select-none no-scrollbar"
         onClick={handleDoubleClick}
       >
         {children}
