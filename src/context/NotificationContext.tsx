@@ -77,27 +77,32 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
     // Trigger System Notification
     if (permissionStatus === 'granted') {
-      const systemTitle = `Kadaknath Pro - ${newNotif.title}`;
+      const systemTitle = 'Kadaknath Pro';
+      const systemBody = newNotif.title + (newNotif.description ? `: ${newNotif.description}` : '');
       const iconUrl = `${window.location.origin}/logo.svg`;
       
       if ('serviceWorker' in navigator) {
         try {
           const registration = await navigator.serviceWorker.ready;
-          registration.showNotification(systemTitle, {
-            body: newNotif.description,
+          // showNotification is the standard way for PWAs to hide the URL
+          await registration.showNotification(systemTitle, {
+            body: systemBody,
             icon: iconUrl,
             badge: iconUrl,
             vibrate: [200, 100, 200],
             tag: newNotif.id,
+            renotify: true,
             data: { url: '/customer/notifications' }
           });
         } catch (err) {
           console.error("Service Worker notification failed:", err);
-          // Fallback to standard notification if SW fails
-          new Notification(systemTitle, { body: newNotif.description, icon: iconUrl });
+          // Fallback only if SW is completely broken, though URL might show
+          if (typeof Notification !== 'undefined') {
+            new Notification(systemTitle, { body: systemBody, icon: iconUrl });
+          }
         }
-      } else {
-        new Notification(systemTitle, { body: newNotif.description, icon: iconUrl });
+      } else if (typeof Notification !== 'undefined') {
+        new Notification(systemTitle, { body: systemBody, icon: iconUrl });
       }
     }
   };
