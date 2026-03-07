@@ -12,7 +12,7 @@ import {
 import { Bell, Package, Calendar, Tag, ChevronRight, Info, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { ScrollArea } from '@/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useNotifications, NotificationType } from '@/context/NotificationContext';
 
 const getIcon = (type: NotificationType) => {
