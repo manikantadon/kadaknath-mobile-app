@@ -7,6 +7,7 @@ import NotificationPanel from '@/components/NotificationPanel';
 import { Input } from '@/components/ui/input';
 import { Search, Bell, Sparkles, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNotifications } from '@/context/NotificationContext';
 
 const PRODUCTS = [
   { id: '1', name: 'Premium Kadaknath Whole', price: 1200, unit: 'kg', image: 'https://images.unsplash.com/photo-1587593810167-a84920ea0781?auto=format&fit=crop&q=80&w=400', category: 'Whole' },
@@ -16,6 +17,16 @@ const PRODUCTS = [
 ];
 
 const CustomerHome = () => {
+  const { unreadCount, addNotification } = useNotifications();
+
+  const triggerTestNotification = () => {
+    addNotification({
+      title: 'Special Offer! 🍗',
+      description: 'Get 20% off on your next Kadaknath Whole purchase. Valid for 24 hours.',
+      type: 'offer'
+    });
+  };
+
   return (
     <MobileLayout role="customer">
       <div className="bg-brand-black pt-12 pb-8 px-6 rounded-b-[3rem] shadow-xl">
@@ -30,7 +41,11 @@ const CustomerHome = () => {
           <NotificationPanel>
             <button className="relative p-2.5 bg-white/10 rounded-2xl border border-white/10 backdrop-blur-md transition-all active:scale-90">
               <Bell size={20} className="text-brand-gold" />
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-brand-red rounded-full border-2 border-brand-black"></span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-red text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-brand-black">
+                  {unreadCount}
+                </span>
+              )}
             </button>
           </NotificationPanel>
         </header>
@@ -48,7 +63,8 @@ const CustomerHome = () => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-brand-gold rounded-[2rem] p-6 text-brand-black relative overflow-hidden shadow-xl shadow-brand-gold/20"
+          onClick={triggerTestNotification}
+          className="bg-brand-gold rounded-[2rem] p-6 text-brand-black relative overflow-hidden shadow-xl shadow-brand-gold/20 cursor-pointer active:scale-95 transition-transform"
         >
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
@@ -56,7 +72,7 @@ const CustomerHome = () => {
               <span className="text-[10px] font-black uppercase tracking-widest">Exclusive Offer</span>
             </div>
             <h3 className="text-xl font-display font-bold mb-1">15% Off Subscriptions</h3>
-            <p className="text-brand-black/70 text-xs font-medium">Fresh Kadaknath delivered weekly to your doorstep.</p>
+            <p className="text-brand-black/70 text-xs font-medium">Tap to test a real notification alert.</p>
           </div>
           <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-brand-black/5 rounded-full blur-2xl"></div>
         </motion.div>
