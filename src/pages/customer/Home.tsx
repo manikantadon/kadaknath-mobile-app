@@ -4,7 +4,7 @@ import React from 'react';
 import MobileLayout from '@/components/MobileLayout';
 import ProductCard from '@/components/ProductCard';
 import { Input } from '@/components/ui/input';
-import { Search, Bell, Sparkles } from 'lucide-react';
+import { Search, Bell, Sparkles, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const PRODUCTS = [
@@ -17,45 +17,52 @@ const PRODUCTS = [
 const CustomerHome = () => {
   return (
     <MobileLayout role="customer">
-      <div className="px-6 pt-8 pb-4">
+      <div className="bg-brand-black pt-12 pb-8 px-6 rounded-b-[3rem] shadow-xl">
         <header className="flex justify-between items-center mb-8">
           <div>
-            <h2 className="text-slate-400 text-sm font-medium">Welcome back,</h2>
-            <h1 className="text-2xl font-black text-slate-900">Premium Member</h1>
+            <div className="flex items-center gap-2 mb-1">
+              <Crown size={14} className="text-brand-gold" />
+              <span className="text-brand-gold text-[10px] font-bold uppercase tracking-[0.2em]">Premium Member</span>
+            </div>
+            <h1 className="text-2xl font-display font-bold text-white">Welcome back</h1>
           </div>
-          <button className="relative p-2 bg-white rounded-2xl shadow-sm border border-slate-100">
-            <Bell size={24} className="text-slate-600" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+          <button className="relative p-2.5 bg-white/10 rounded-2xl border border-white/10 backdrop-blur-md">
+            <Bell size={20} className="text-brand-gold" />
+            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-brand-red rounded-full border-2 border-brand-black"></span>
           </button>
         </header>
 
-        <div className="relative mb-8">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
           <Input 
-            placeholder="Search products, recipes..." 
-            className="pl-12 h-14 rounded-2xl border-none bg-white shadow-sm text-base"
+            placeholder="Search premium cuts..." 
+            className="pl-11 h-12 rounded-2xl border-none bg-white/10 text-white placeholder:text-slate-500 backdrop-blur-md focus-visible:ring-brand-gold"
           />
         </div>
+      </div>
 
+      <div className="px-6 -mt-6">
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl p-6 text-white mb-8 relative overflow-hidden"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-brand-gold rounded-[2rem] p-6 text-brand-black relative overflow-hidden shadow-xl shadow-brand-gold/20"
         >
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles size={18} className="text-indigo-200" />
-              <span className="text-xs font-bold uppercase tracking-wider text-indigo-100">Loyalty Reward</span>
+              <Sparkles size={16} className="text-brand-black" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Exclusive Offer</span>
             </div>
-            <h3 className="text-xl font-bold mb-1">Get 15% Off Subscriptions</h3>
-            <p className="text-indigo-100 text-sm opacity-90">Fresh Kadaknath delivered weekly to your doorstep.</p>
+            <h3 className="text-xl font-display font-bold mb-1">15% Off Subscriptions</h3>
+            <p className="text-brand-black/70 text-xs font-medium">Fresh Kadaknath delivered weekly to your doorstep.</p>
           </div>
-          <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-brand-black/5 rounded-full blur-2xl"></div>
         </motion.div>
+      </div>
 
+      <div className="px-6 pt-8 pb-4">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-bold text-slate-900">Featured Products</h3>
-          <button className="text-indigo-600 text-sm font-bold">View All</button>
+          <h3 className="text-lg font-display font-bold text-brand-charcoal">Featured Products</h3>
+          <button className="text-brand-red text-xs font-bold uppercase tracking-widest">View All</button>
         </div>
 
         <div className="grid grid-cols-2 gap-4">

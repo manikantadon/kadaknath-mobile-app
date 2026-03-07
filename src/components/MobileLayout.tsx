@@ -34,12 +34,12 @@ const MobileLayout = ({ children, role }: MobileLayoutProps) => {
   const currentNav = navItems[role];
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 max-w-md mx-auto border-x border-slate-200 shadow-xl overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-brand-offwhite max-w-md mx-auto border-x border-slate-200 shadow-2xl overflow-hidden">
       <main className="flex-1 overflow-y-auto pb-24">
         {children}
       </main>
       
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 backdrop-blur-lg border-t border-slate-200 px-6 py-3 flex justify-between items-center z-50">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-brand-black border-t border-brand-gold/20 px-6 py-4 flex justify-between items-center z-50 rounded-t-[2rem]">
         {currentNav.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -47,12 +47,12 @@ const MobileLayout = ({ children, role }: MobileLayoutProps) => {
               key={item.path}
               to={item.path}
               className={cn(
-                "flex flex-col items-center gap-1 transition-all duration-200",
-                isActive ? "text-indigo-600 scale-110" : "text-slate-400 hover:text-slate-600"
+                "flex flex-col items-center gap-1 transition-all duration-300",
+                isActive ? "text-brand-gold scale-110" : "text-slate-500 hover:text-slate-300"
               )}
             >
-              <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+              <span className="text-[10px] font-bold uppercase tracking-widest">{item.label}</span>
             </Link>
           );
         })}
