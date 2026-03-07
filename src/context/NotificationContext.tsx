@@ -77,13 +77,16 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
     // Trigger System Notification
     if (permissionStatus === 'granted') {
+      const systemTitle = `Kadaknath Pro - ${newNotif.title}`;
+      const iconUrl = `${window.location.origin}/logo.svg`;
+      
       if ('serviceWorker' in navigator) {
         try {
           const registration = await navigator.serviceWorker.ready;
-          registration.showNotification(newNotif.title, {
+          registration.showNotification(systemTitle, {
             body: newNotif.description,
-            icon: '/logo.svg',
-            badge: '/logo.svg',
+            icon: iconUrl,
+            badge: iconUrl,
             vibrate: [200, 100, 200],
             tag: newNotif.id,
             data: { url: '/customer/notifications' }
@@ -91,10 +94,10 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         } catch (err) {
           console.error("Service Worker notification failed:", err);
           // Fallback to standard notification if SW fails
-          new Notification(newNotif.title, { body: newNotif.description, icon: '/logo.svg' });
+          new Notification(systemTitle, { body: newNotif.description, icon: iconUrl });
         }
       } else {
-        new Notification(newNotif.title, { body: newNotif.description, icon: '/logo.svg' });
+        new Notification(systemTitle, { body: newNotif.description, icon: iconUrl });
       }
     }
   };
