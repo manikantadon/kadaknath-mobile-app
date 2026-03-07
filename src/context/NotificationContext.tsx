@@ -84,25 +84,28 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     // Trigger System Notification
     if (permissionStatus === 'granted') {
       const systemTitle = 'Kadaknath Pro';
-      const systemBody = newNotif.title + (newNotif.description ? `: ${newNotif.description}` : '');
-      const iconUrl = `${window.location.origin}/logo.svg`;
+      // Use the title as the body for a cleaner look in the notification tray
+      const systemBody = newNotif.title;
+      const iconUrl = `${window.location.origin}/logo.svg`; // Recommended: change to logo.png
       
       if ('serviceWorker' in navigator) {
         try {
           const registration = await navigator.serviceWorker.ready;
-          // showNotification is the standard way for PWAs to hide the URL
           await registration.showNotification(systemTitle, {
             body: systemBody,
             icon: iconUrl,
             badge: iconUrl,
-            vibrate: [200, 100, 200],
-            tag: newNotif.id,
+            tag: 'kadaknath-alert', // Groups notifications
             renotify: true,
-            data: { url: '/customer/notifications' }
+            silent: false,
+            vibrate: [100, 50, 100],
+            data: { url: '/customer/notifications' },
+            actions: [
+              { action: 'open', title: 'View Details' }
+            ]
           });
         } catch (err) {
-          console.error("Service Worker notification failed:", err);
-          // Fallback only if SW is completely broken, though URL might show
+          console.error("SW notification failed:", err);
           if (typeof Notification !== 'undefined') {
             new Notification(systemTitle, { body: systemBody, icon: iconUrl });
           }
