@@ -4,6 +4,7 @@ import React from 'react';
 import MobileLayout from '@/components/MobileLayout';
 import { Package, TrendingUp, Users, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 const AdminDashboard = () => {
   const stats = [
