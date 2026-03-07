@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import CustomerHome from "./pages/customer/Home";
 import Traceability from "./pages/customer/Traceability";
 import CustomerOrders from "./pages/customer/Orders";
+import Profile from "./pages/customer/Profile";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminOrders from "./pages/admin/Orders";
 import AdminStaff from "./pages/admin/Staff";
@@ -28,7 +29,7 @@ const App = () => (
           <Route path="/customer" element={<CustomerHome />} />
           <Route path="/customer/trace" element={<Traceability />} />
           <Route path="/customer/orders" element={<CustomerOrders />} />
-          <Route path="/customer/profile" element={<div className="p-8">Profile Page (Coming Soon)</div>} />
+          <Route path="/customer/profile" element={<Profile />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
