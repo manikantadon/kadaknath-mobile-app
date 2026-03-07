@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Home, Search, ShoppingBag, User, ShieldCheck, Truck } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 interface MobileLayoutProps {
@@ -12,6 +12,13 @@ interface MobileLayoutProps {
 
 const MobileLayout = ({ children, role }: MobileLayoutProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [lastTap, setLastTap] = React.useState<{ time: number; x: number } | null>(null);
+
+  // Edge threshold (15% of screen width)
+  const edgeThreshold = 0.15;
+  // Double tap delay (milliseconds)
+  const doubleTapDelay = 300;
 
   const navItems = {
     customer: [
@@ -33,9 +40,48 @@ const MobileLayout = ({ children, role }: MobileLayoutProps) => {
 
   const currentNav = navItems[role];
 
+  const handleDoubleClick = (e: React.MouseEvent | React.TouchEvent) => {
+    // Basic double tap/click detection
+    const now = Date.now();
+    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+    const screenWidth = window.innerWidth;
+
+    const isLeftEdge = clientX < screenWidth * edgeThreshold;
+    const isRightEdge = clientX > screenWidth * (1 - edgeThreshold);
+
+    // ONLY work on the left or right corners/edges
+    if (!isLeftEdge && !isRightEdge) {
+      setLastTap(null);
+      return;
+    }
+
+    if (lastTap && (now - lastTap.time) < doubleTapDelay) {
+      // Double tap detected
+      const currentIndex = currentNav.findIndex(item => item.path === location.pathname);
+      
+      if (isRightEdge) {
+        // Right corner double click -> Next
+        if (currentIndex < currentNav.length - 1) {
+          navigate(currentNav[currentIndex + 1].path);
+        }
+      } else if (isLeftEdge) {
+        // Left corner double click -> Previous
+        if (currentIndex > 0) {
+          navigate(currentNav[currentIndex - 1].path);
+        }
+      }
+      setLastTap(null); // Reset after successful detection
+    } else {
+      setLastTap({ time: now, x: clientX });
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-brand-offwhite max-w-md mx-auto border-x border-slate-200 shadow-2xl overflow-hidden">
-      <main className="flex-1 overflow-y-auto pb-24">
+      <main 
+        className="flex-1 overflow-y-auto pb-24 select-none"
+        onClick={handleDoubleClick}
+      >
         {children}
       </main>
       

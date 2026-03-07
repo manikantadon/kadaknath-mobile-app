@@ -8,34 +8,53 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { showSuccess } from '@/utils/toast';
+import { PRODUCTS } from '@/lib/products';
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Mock data for the product
-  const product = {
-    id: id,
-    name: 'Premium Kadaknath Whole',
-    price: 1200,
-    unit: 'kg',
-    rating: 4.9,
-    reviews: 128,
-    category: 'Whole',
-    image: 'https://images.unsplash.com/photo-1587593810167-a84920ea0781?auto=format&fit=crop&q=80&w=800',
-    description: 'Our signature Kadaknath chicken is raised in a stress-free environment, fed with organic grains, and aged to perfection for the most authentic flavor and medicinal properties.',
-    nutrition: [
-      { label: 'Protein', value: '25g' },
-      { label: 'Fat', value: '0.73%' },
-      { label: 'Iron', value: 'High' },
-      { label: 'Cholesterol', value: 'Low' },
-    ],
-    farm: {
-      name: 'Green Valley Organic Farm',
-      location: 'Jhabua, MP',
-      certified: true
+  // Find product by id
+  const product = PRODUCTS.find(p => p.id === id);
+
+  const handleShare = async () => {
+    if (!product) return;
+
+    const shareData = {
+      title: product.name,
+      text: `Check out this ${product.name} from Kadaknath Pro!`,
+      url: window.location.href,
+    };
+
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          console.error('Error sharing:', err);
+        }
+      }
+    } else {
+      // Fallback: Copy to clipboard
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        showSuccess('Link copied to clipboard! 📋');
+      } catch (err) {
+        console.error('Failed to copy:', err);
+      }
     }
   };
+
+  if (!product) {
+    return (
+      <MobileLayout role="customer">
+        <div className="flex flex-col items-center justify-center h-[80vh] px-6 text-center">
+          <h2 className="text-2xl font-bold mb-4">Product not found</h2>
+          <Button onClick={() => navigate('/customer')}>Back to Home</Button>
+        </div>
+      </MobileLayout>
+    );
+  }
 
   return (
     <MobileLayout role="customer">
@@ -57,7 +76,10 @@ const ProductDetails = () => {
             >
               <ChevronLeft size={20} />
             </button>
-            <button className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white border border-white/20">
+            <button 
+              onClick={handleShare}
+              className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white border border-white/20 active:scale-90 transition-transform"
+            >
               <Share2 size={18} />
             </button>
           </div>
@@ -86,8 +108,8 @@ const ProductDetails = () => {
             <div className="flex items-center gap-4 mb-8">
               <div className="flex items-center gap-1">
                 <Star size={14} className="text-brand-gold fill-brand-gold" />
-                <span className="text-sm font-bold text-brand-black">{product.rating}</span>
-                <span className="text-xs text-slate-400">({product.reviews} reviews)</span>
+                <span className="text-sm font-bold text-brand-black">{product.rating || 0}</span>
+                <span className="text-xs text-slate-400">({product.reviews || 0} reviews)</span>
               </div>
               <div className="w-[1px] h-4 bg-slate-100" />
               <div className="flex items-center gap-1 text-emerald-600">
@@ -96,34 +118,42 @@ const ProductDetails = () => {
               </div>
             </div>
 
-            <h3 className="font-bold text-brand-black mb-2">Description</h3>
-            <p className="text-sm text-slate-500 leading-relaxed mb-8">
-              {product.description}
-            </p>
+            {product.description && (
+              <>
+                <h3 className="font-bold text-brand-black mb-2">Description</h3>
+                <p className="text-sm text-slate-500 leading-relaxed mb-8">
+                  {product.description}
+                </p>
+              </>
+            )}
 
             {/* Nutrition Grid */}
-            <div className="grid grid-cols-4 gap-3 mb-8">
-              {product.nutrition.map((item) => (
-                <div key={item.label} className="bg-brand-offwhite p-3 rounded-2xl text-center">
-                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mb-1">{item.label}</div>
-                  <div className="text-xs font-black text-brand-black">{item.value}</div>
-                </div>
-              ))}
-            </div>
+            {product.nutrition && (
+              <div className="grid grid-cols-4 gap-3 mb-8">
+                {product.nutrition.map((item) => (
+                  <div key={item.label} className="bg-brand-offwhite p-3 rounded-2xl text-center">
+                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mb-1">{item.label}</div>
+                    <div className="text-xs font-black text-brand-black">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Farm Info */}
-            <div className="bg-brand-black rounded-[2rem] p-6 text-white mb-8">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-brand-gold">
-                  <MapPin size={24} />
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Sourced From</p>
-                  <h4 className="font-bold text-sm">{product.farm.name}</h4>
-                  <p className="text-[10px] text-brand-gold font-medium">{product.farm.location}</p>
+            {product.farm && (
+              <div className="bg-brand-black rounded-[2rem] p-6 text-white mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-brand-gold">
+                    <MapPin size={24} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Sourced From</p>
+                    <h4 className="font-bold text-sm">{product.farm.name}</h4>
+                    <p className="text-[10px] text-brand-gold font-medium">{product.farm.location}</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </motion.div>
         </div>
 

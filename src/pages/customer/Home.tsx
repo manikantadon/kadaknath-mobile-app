@@ -8,16 +8,19 @@ import { Input } from '@/components/ui/input';
 import { Search, Bell, Sparkles, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNotifications } from '@/context/NotificationContext';
+import { PRODUCTS } from '@/lib/products';
+import { useNavigate } from 'react-router-dom';
 
-const PRODUCTS = [
-  { id: '1', name: 'Premium Kadaknath Whole', price: 1200, unit: 'kg', image: 'https://images.unsplash.com/photo-1587593810167-a84920ea0781?auto=format&fit=crop&q=80&w=400', category: 'Whole' },
-  { id: '2', name: 'Curry Cut (Skinless)', price: 1350, unit: 'kg', image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&q=80&w=400', category: 'Cuts', isSubscription: true },
-  { id: '3', name: 'Kadaknath Eggs (Case)', price: 450, unit: '12 pcs', image: 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&q=80&w=400', category: 'Eggs' },
-  { id: '4', name: 'Breast Fillets', price: 1500, unit: 'kg', image: 'https://images.unsplash.com/photo-1602491673980-73aa38de027a?auto=format&fit=crop&q=80&w=400', category: 'Cuts' },
+const CATEGORIES = [
+  { name: 'Whole', icon: '🍗', color: 'bg-orange-50' },
+  { name: 'Cuts', icon: '🔪', color: 'bg-blue-50' },
+  { name: 'Eggs', icon: '🥚', color: 'bg-yellow-50' },
+  { name: 'Gifts', icon: '🎁', color: 'bg-pink-50' },
 ];
 
 const CustomerHome = () => {
   const { unreadCount, addNotification } = useNotifications();
+  const navigate = useNavigate();
 
   const triggerTestNotification = () => {
     addNotification({
@@ -78,14 +81,37 @@ const CustomerHome = () => {
         </motion.div>
       </div>
 
+      <div className="px-6 pt-8">
+        <h3 className="text-lg font-display font-bold text-brand-charcoal mb-4">Categories</h3>
+        <div className="grid grid-cols-4 gap-4">
+          {CATEGORIES.map((cat) => (
+            <button 
+              key={cat.name}
+              onClick={() => navigate('/customer/products', { state: { category: cat.name } })}
+              className="flex flex-col items-center gap-2 group active:scale-95 transition-transform"
+            >
+              <div className={`w-14 h-14 ${cat.color} rounded-2xl flex items-center justify-center text-2xl shadow-sm group-hover:shadow-md transition-all`}>
+                {cat.icon}
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{cat.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="px-6 pt-8 pb-4">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-display font-bold text-brand-charcoal">Featured Products</h3>
-          <button className="text-brand-red text-xs font-bold uppercase tracking-widest">View All</button>
+          <button 
+            onClick={() => navigate('/customer/products')}
+            className="text-brand-red text-xs font-bold uppercase tracking-widest active:scale-95 transition-transform"
+          >
+            View All
+          </button>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          {PRODUCTS.map((product) => (
+          {PRODUCTS.slice(0, 4).map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>

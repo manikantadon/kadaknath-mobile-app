@@ -13,6 +13,7 @@ import CustomerOrders from "./pages/customer/Orders";
 import Profile from "./pages/customer/Profile";
 import Notifications from "./pages/customer/Notifications";
 import ProductDetails from "./pages/customer/ProductDetails";
+import ProductList from "./pages/customer/ProductList";
 import Cart from "./pages/customer/Cart";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminOrders from "./pages/admin/Orders";
@@ -35,6 +36,7 @@ const App = () => (
             
             {/* Customer Routes */}
             <Route path="/customer" element={<CustomerHome />} />
+            <Route path="/customer/products" element={<ProductList />} />
             <Route path="/customer/product/:id" element={<ProductDetails />} />
             <Route path="/customer/cart" element={<Cart />} />
             <Route path="/customer/trace" element={<Traceability />} />
