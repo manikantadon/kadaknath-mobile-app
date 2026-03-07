@@ -14,6 +14,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminOrders from "./pages/admin/Orders";
 import AdminStaff from "./pages/admin/Staff";
 import DriverDeliveries from "./pages/driver/Deliveries";
+import DriverProfile from "./pages/driver/Profile";
 
 const queryClient = new QueryClient();
 
@@ -40,7 +41,7 @@ const App = () => (
 
           {/* Driver Routes */}
           <Route path="/driver" element={<DriverDeliveries />} />
-          <Route path="/driver/profile" element={<div className="p-8">Driver Profile (Coming Soon)</div>} />
+          <Route path="/driver/profile" element={<DriverProfile />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
