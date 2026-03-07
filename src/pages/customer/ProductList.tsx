@@ -4,11 +4,20 @@ import React, { useState, useMemo } from 'react';
 import MobileLayout from '@/components/MobileLayout';
 import ProductCard from '@/components/ProductCard';
 import { Input } from '@/components/ui/input';
-import { Search, ChevronLeft, Filter, SlidersHorizontal } from 'lucide-react';
+import { Search, ChevronLeft, Filter, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { PRODUCTS } from '@/lib/products';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const CATEGORIES = ['All', 'Whole', 'Cuts', 'Eggs', 'Gifts'];
 
@@ -17,15 +26,24 @@ const ProductList = () => {
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState(location.state?.category || 'All');
+  const [sortBy, setSortBy] = useState('popularity');
 
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter(product => {
+    let result = PRODUCTS.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            product.category.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = activeCategory === 'All' || product.category === activeCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [searchQuery, activeCategory]);
+
+    // Apply Sorting
+    return [...result].sort((a, b) => {
+      if (sortBy === 'price-low') return a.price - b.price;
+      if (sortBy === 'price-high') return b.price - a.price;
+      if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
+      return (b.popularity || 0) - (a.popularity || 0);
+    });
+  }, [searchQuery, activeCategory, sortBy]);
 
   return (
     <MobileLayout role="customer">
@@ -52,7 +70,7 @@ const ProductList = () => {
       </div>
 
       {/* Categories Scroller */}
-      <div className="sticky top-0 bg-brand-offwhite z-10 py-4 overflow-hidden border-b border-slate-100">
+      <div className="sticky top-0 bg-background z-10 py-4 overflow-hidden border-b border-border">
         <div className="flex overflow-x-auto gap-2 px-6 no-scrollbar">
           {CATEGORIES.map((cat) => (
             <button
@@ -61,8 +79,8 @@ const ProductList = () => {
               className={cn(
                 "px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap border",
                 activeCategory === cat 
-                  ? "bg-brand-black text-brand-gold border-brand-black shadow-lg shadow-black/10" 
-                  : "bg-white text-slate-400 border-slate-100 hover:border-slate-200"
+                  ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-black/10" 
+                  : "bg-card text-muted-foreground border-border hover:border-brand-gold/50"
               )}
             >
               {cat}
@@ -73,13 +91,36 @@ const ProductList = () => {
 
       <div className="px-6 py-6">
         <div className="flex justify-between items-center mb-6">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
             Showing {filteredProducts.length} items
           </p>
-          <button className="flex items-center gap-2 text-brand-black font-bold text-xs uppercase tracking-widest">
-            <SlidersHorizontal size={14} />
-            Sort
-          </button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 text-foreground font-bold text-xs uppercase tracking-widest active:scale-95 transition-transform bg-card px-3 py-2 rounded-xl border border-border shadow-sm">
+                <ArrowUpDown size={14} className="text-brand-gold" />
+                Sort
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 rounded-2xl p-2 bg-card border-border shadow-2xl">
+              <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-3 py-2">Sort by</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-border/50" />
+              <DropdownMenuRadioGroup value={sortBy} onValueChange={setSortBy}>
+                <DropdownMenuRadioItem value="popularity" className="rounded-xl text-sm font-bold py-3 focus:bg-muted cursor-pointer">
+                  Popularity
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="price-low" className="rounded-xl text-sm font-bold py-3 focus:bg-muted cursor-pointer">
+                  Price: Low to High
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="price-high" className="rounded-xl text-sm font-bold py-3 focus:bg-muted cursor-pointer">
+                  Price: High to Low
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="rating" className="rounded-xl text-sm font-bold py-3 focus:bg-muted cursor-pointer">
+                  Customer Rating
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="grid grid-cols-2 gap-4">

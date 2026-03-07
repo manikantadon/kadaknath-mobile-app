@@ -12,10 +12,10 @@ import { PRODUCTS } from '@/lib/products';
 import { useNavigate } from 'react-router-dom';
 
 const CATEGORIES = [
-  { name: 'Whole', icon: '🍗', color: 'bg-orange-50' },
-  { name: 'Cuts', icon: '🔪', color: 'bg-blue-50' },
-  { name: 'Eggs', icon: '🥚', color: 'bg-yellow-50' },
-  { name: 'Gifts', icon: '🎁', color: 'bg-pink-50' },
+  { name: 'Whole', icon: '🍗', color: 'bg-orange-50', darkColor: 'dark:bg-orange-950/30' },
+  { name: 'Cuts', icon: '🔪', color: 'bg-blue-50', darkColor: 'dark:bg-blue-950/30' },
+  { name: 'Eggs', icon: '🥚', color: 'bg-yellow-50', darkColor: 'dark:bg-yellow-950/30' },
+  { name: 'Gifts', icon: '🎁', color: 'bg-pink-50', darkColor: 'dark:bg-pink-950/30' },
 ];
 
 const CustomerHome = () => {
@@ -82,7 +82,7 @@ const CustomerHome = () => {
       </div>
 
       <div className="px-6 pt-8">
-        <h3 className="text-lg font-display font-bold text-brand-charcoal mb-4">Categories</h3>
+        <h3 className="text-lg font-display font-bold text-foreground mb-4">Categories</h3>
         <div className="grid grid-cols-4 gap-4">
           {CATEGORIES.map((cat) => (
             <button 
@@ -90,10 +90,10 @@ const CustomerHome = () => {
               onClick={() => navigate('/customer/products', { state: { category: cat.name } })}
               className="flex flex-col items-center gap-2 group active:scale-95 transition-transform"
             >
-              <div className={`w-14 h-14 ${cat.color} rounded-2xl flex items-center justify-center text-2xl shadow-sm group-hover:shadow-md transition-all`}>
+              <div className={`w-14 h-14 ${cat.color} ${cat.darkColor} rounded-2xl flex items-center justify-center text-2xl shadow-sm group-hover:shadow-md transition-all border border-transparent dark:border-white/5`}>
                 {cat.icon}
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{cat.name}</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{cat.name}</span>
             </button>
           ))}
         </div>
@@ -101,10 +101,10 @@ const CustomerHome = () => {
 
       <div className="px-6 pt-8 pb-4">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-display font-bold text-brand-charcoal">Featured Products</h3>
+          <h3 className="text-lg font-display font-bold text-foreground">Featured Products</h3>
           <button 
             onClick={() => navigate('/customer/products')}
-            className="text-brand-red text-xs font-bold uppercase tracking-widest active:scale-95 transition-transform"
+            className="text-brand-red dark:text-brand-gold text-xs font-bold uppercase tracking-widest active:scale-95 transition-transform"
           >
             View All
           </button>
