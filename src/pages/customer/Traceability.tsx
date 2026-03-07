@@ -94,18 +94,43 @@ const Traceability = () => {
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+      // Clear any existing streams first
+      stopCamera();
+
+      const constraints = {
+        video: { 
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: false
-      });
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
         setIsCameraActive(true);
+        
+        // Force play and handle potential autoplay blocks
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play().catch(e => console.error("Autoplay prevented:", e));
+        };
       }
     } catch (err) {
-      showError("Could not access camera. Please check permissions.");
-      console.error(err);
+      console.error("Camera Error:", err);
+      // Fallback to basic video if ideal constraints fail
+      try {
+        const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (videoRef.current) {
+          videoRef.current.srcObject = fallbackStream;
+          streamRef.current = fallbackStream;
+          setIsCameraActive(true);
+        }
+      } catch (fallbackErr) {
+        showError("Camera access failed. Please ensure you are on HTTPS and have given permission.");
+      }
     }
   };
 
@@ -268,26 +293,29 @@ const Traceability = () => {
               <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-brand-gold rounded-br-2xl" />
             </div>
           ) : (
-            <div className="relative w-full aspect-square max-w-[240px] mx-auto mb-8 overflow-hidden rounded-[3rem] bg-black">
+            <div className="relative w-full aspect-square max-w-[240px] mx-auto mb-8 overflow-hidden rounded-[3rem] bg-black shadow-2xl">
               <video 
                 ref={videoRef} 
                 autoPlay 
-                playsInline 
+                playsInline
+                muted
+                controls={false}
+                disablePictureInPicture
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 border-2 border-brand-gold rounded-[3rem] pointer-events-none" />
+              <div className="absolute inset-0 border-4 border-brand-gold/30 rounded-[3rem] pointer-events-none" />
               <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-brand-gold/50 shadow-[0_0_15px_rgba(212,175,55,0.8)] animate-[scan_2s_ease-in-out_infinite]" />
               
               <button 
                 onClick={handleSimulatedScan}
-                className="absolute inset-0 flex items-center justify-center bg-black/40 text-white font-black uppercase text-[10px] tracking-widest opacity-0 hover:opacity-100 transition-opacity"
+                className="absolute inset-0 flex items-center justify-center bg-black/20 text-white font-black uppercase text-[10px] tracking-widest opacity-0 hover:opacity-100 transition-opacity"
               >
                 Tap to Scan Batch
               </button>
 
               <button 
                 onClick={stopCamera}
-                className="absolute top-4 right-4 w-8 h-8 bg-black/50 rounded-full flex items-center justify-center text-white backdrop-blur-md"
+                className="absolute top-4 right-4 w-8 h-8 bg-black/50 rounded-full flex items-center justify-center text-white backdrop-blur-md z-20"
               >
                 <X size={16} />
               </button>
