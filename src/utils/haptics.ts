@@ -12,25 +12,55 @@ const PATTERNS = {
   error: [50, 100, 50, 100],
 };
 
-// Sound Assets (Lightweight base64 or public URLs)
+// High-quality Sound Assets (Standard UI sounds)
 const SOUNDS = {
-  tap: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
-  success: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3',
-  error: 'https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3',
-  pop: 'https://assets.mixkit.co/active_storage/sfx/2573/2573-preview.mp3',
+  tap: 'https://cdn.pixabay.com/audio/2022/03/15/audio_78390a36da.mp3',
+  success: 'https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3',
+  error: 'https://cdn.pixabay.com/audio/2022/03/10/audio_c1f9672bba.mp3',
+  pop: 'https://cdn.pixabay.com/audio/2022/03/10/audio_5e29f0d362.mp3',
 };
 
 class HapticService {
   private static instance: HapticService;
   private audioCache: Map<string, HTMLAudioElement> = new Map();
+  private isUnlocked: boolean = false;
 
-  private constructor() {}
+  private constructor() {
+    // Setup unlock listener for mobile browser autoplay policies
+    if (typeof window !== 'undefined') {
+      const unlock = () => {
+        this.unlockAudio();
+        window.removeEventListener('click', unlock);
+        window.removeEventListener('touchstart', unlock);
+      };
+      window.addEventListener('click', unlock);
+      window.addEventListener('touchstart', unlock);
+    }
+  }
 
   static getInstance() {
     if (!HapticService.instance) {
       HapticService.instance = new HapticService();
     }
     return HapticService.instance;
+  }
+
+  private async unlockAudio() {
+    if (this.isUnlocked) return;
+    
+    // Create and play silent buffers to unlock audio context
+    for (const url of Object.values(SOUNDS)) {
+      try {
+        const audio = new Audio(url);
+        audio.volume = 0;
+        await audio.play().catch(() => {});
+        this.audioCache.set(url, audio);
+      } catch (e) {
+        console.warn('Initial unlock failed for:', url);
+      }
+    }
+    this.isUnlocked = true;
+    console.log('Audio feedback system unlocked');
   }
 
   private playSound(url: string, volume = 0.4) {
@@ -42,9 +72,15 @@ class HapticService {
       }
       audio.currentTime = 0;
       audio.volume = volume;
-      audio.play().catch(() => {
-        // Autoplay policy might block this if no user interaction yet
-      });
+      const playPromise = audio.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          // If it failed, try unlocking again
+          if (!this.isUnlocked) this.unlockAudio();
+          console.debug('Playback blocked by browser policy');
+        });
+      }
     } catch (e) {
       console.warn('Sound playback failed', e);
     }
@@ -59,27 +95,27 @@ class HapticService {
   // Public methods
   lightTap() {
     this.vibrate(PATTERNS.light);
-    this.playSound(SOUNDS.tap, 0.2);
+    this.playSound(SOUNDS.tap, 0.1);
   }
 
   mediumTap() {
     this.vibrate(PATTERNS.medium);
-    this.playSound(SOUNDS.tap, 0.3);
+    this.playSound(SOUNDS.tap, 0.2);
   }
 
   success() {
     this.vibrate(PATTERNS.success);
-    this.playSound(SOUNDS.success, 0.5);
+    this.playSound(SOUNDS.success, 0.4);
   }
 
   error() {
     this.vibrate(PATTERNS.error);
-    this.playSound(SOUNDS.error, 0.5);
+    this.playSound(SOUNDS.error, 0.4);
   }
 
   impact() {
     this.vibrate(PATTERNS.heavy);
-    this.playSound(SOUNDS.pop, 0.4);
+    this.playSound(SOUNDS.pop, 0.3);
   }
 }
 
