@@ -1,121 +1,125 @@
 "use client";
 
 import React from 'react';
-import { 
-  Drawer, 
-  DrawerContent, 
-  DrawerHeader, 
-  DrawerTitle, 
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
   DrawerTrigger,
-  DrawerFooter
-} from '@/components/ui/drawer';
-import { Bell, Package, Calendar, Tag, ChevronRight, Info, ShieldCheck, ShieldAlert } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+} from "@/components/ui/drawer";
+import { Bell, CheckCircle2, Package, Calendar, Tag, Info, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useNotifications, NotificationType } from '@/context/NotificationContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const getIcon = (type: NotificationType) => {
   switch (type) {
-    case 'order': return { icon: Package, color: 'text-blue-500', bg: 'bg-blue-50' };
-    case 'subscription': return { icon: Calendar, color: 'text-brand-gold', bg: 'bg-brand-gold/10' };
-    case 'offer': return { icon: Tag, color: 'text-brand-red', bg: 'bg-brand-red/10' };
-    default: return { icon: Info, color: 'text-slate-500', bg: 'bg-slate-50' };
+    case 'order': return { icon: Package, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' };
+    case 'subscription': return { icon: Calendar, color: 'text-brand-gold', bg: 'bg-brand-gold/10 dark:bg-brand-gold/5' };
+    case 'offer': return { icon: Tag, color: 'text-brand-red', bg: 'bg-brand-red/10 dark:bg-brand-red/5' };
+    default: return { icon: Info, color: 'text-slate-500', bg: 'bg-slate-50 dark:bg-white/5' };
   }
 };
 
 const NotificationPanel = ({ children }: { children: React.ReactNode }) => {
-  const navigate = useNavigate();
-  const { notifications, markAsRead, requestPermission, permissionStatus } = useNotifications();
+  const { notifications, unreadCount, removeNotification, clearAll } = useNotifications();
 
   return (
     <Drawer>
       <DrawerTrigger asChild>
         {children}
       </DrawerTrigger>
-      <DrawerContent className="bg-brand-offwhite border-none rounded-t-[3rem] max-w-md mx-auto h-[80vh]">
-        <div className="mx-auto w-12 h-1.5 bg-slate-200 rounded-full mt-4 mb-2" />
-        <DrawerHeader className="px-6 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Bell size={20} className="text-brand-gold" />
-            <DrawerTitle className="text-xl font-display font-bold text-brand-black">Notifications</DrawerTitle>
-          </div>
-          
-          {permissionStatus !== 'granted' ? (
-            <button 
-              onClick={requestPermission}
-              className="text-[10px] font-black text-brand-gold uppercase tracking-widest border border-brand-gold/20 px-3 py-1 rounded-full flex items-center gap-1 animate-pulse"
-            >
-              <ShieldAlert size={12} />
-              Enable Alerts
-            </button>
-          ) : (
-            <div className="text-[10px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1">
-              <ShieldCheck size={12} />
-              Active
+      <DrawerContent className="bg-background border-none rounded-t-[3rem] max-w-md mx-auto h-[80vh]">
+        <div className="mx-auto w-12 h-1.5 bg-muted rounded-full mt-4 mb-2" />
+        
+        <div className="flex flex-col h-full overflow-hidden">
+          <DrawerHeader className="px-8 flex items-center justify-between">
+            <div>
+              <DrawerTitle className="text-2xl font-display font-bold text-foreground">Notifications</DrawerTitle>
+              <p className="text-xs text-muted-foreground mt-1">You have {unreadCount} unread messages</p>
             </div>
-          )}
-        </DrawerHeader>
-
-        <ScrollArea className="flex-1 px-6 py-4">
-          {permissionStatus === 'default' && (
-            <div className="mb-6 p-4 bg-brand-gold/10 rounded-2xl border border-brand-gold/20">
-              <p className="text-xs font-bold text-brand-black mb-2">Don't miss your delivery!</p>
-              <p className="text-[10px] text-slate-500 mb-3">Enable system notifications to get real-time updates on your mobile device.</p>
+            {notifications.length > 0 && (
               <button 
-                onClick={requestPermission}
-                className="w-full py-2 bg-brand-black text-brand-gold rounded-xl text-[10px] font-black uppercase tracking-widest"
+                onClick={clearAll}
+                className="text-brand-red text-[10px] font-black uppercase tracking-widest flex items-center gap-1 active:scale-95 transition-transform"
               >
-                Allow Notifications
+                <Trash2 size={12} />
+                Clear All
               </button>
-            </div>
-          )}
-
-          <div className="space-y-4 pb-6">
-            {notifications.length > 0 ? (
-              notifications.map((notif) => {
-                const { icon: Icon, color, bg } = getIcon(notif.type);
-                return (
-                  <button 
-                    key={notif.id}
-                    onClick={() => {
-                      markAsRead(notif.id);
-                      navigate(`/customer/orders`);
-                    }}
-                    className="w-full flex items-start gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm text-left group transition-all active:scale-95"
-                  >
-                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", bg, color)}>
-                      <Icon size={20} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start mb-1">
-                        <h4 className="font-bold text-brand-black text-sm truncate">{notif.title}</h4>
-                        {!notif.isRead && <span className="w-2 h-2 bg-brand-red rounded-full mt-1.5" />}
-                      </div>
-                      <p className="text-xs text-slate-500 line-clamp-2 mb-1">{notif.description}</p>
-                      <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">{notif.time}</span>
-                    </div>
-                  </button>
-                );
-              })
-            ) : (
-              <div className="text-center py-20">
-                <Bell size={40} className="mx-auto text-slate-200 mb-4" />
-                <p className="text-slate-400 text-sm font-medium">No notifications yet</p>
-              </div>
             )}
-          </div>
-        </ScrollArea>
+          </DrawerHeader>
 
-        <DrawerFooter className="px-6 pb-10">
-          <button 
-            onClick={() => navigate('/customer/notifications')}
-            className="w-full py-4 bg-brand-black text-brand-gold rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-xl shadow-brand-black/20"
-          >
-            View All History
-            <ChevronRight size={16} />
-          </button>
-        </DrawerFooter>
+          <div className="flex-1 overflow-y-auto px-6 py-4 no-scrollbar">
+            <div className="space-y-3">
+              <AnimatePresence mode="popLayout">
+                {notifications.length > 0 ? (
+                  notifications.map((notif) => {
+                    const { icon: Icon, color, bg } = getIcon(notif.type);
+                    return (
+                      <motion.div
+                        key={notif.id}
+                        layout
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 1000 }}
+                        dragElastic={{ left: 0, right: 0.5 }}
+                        onDragEnd={(_, info) => {
+                          // Very sensitive: if moved right even a little bit
+                          if (info.offset.x > 20 || info.velocity.x > 20) {
+                            removeNotification(notif.id);
+                          }
+                        }}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ 
+                          opacity: 0, 
+                          x: 500,
+                          transition: { type: "spring", stiffness: 500, damping: 40 } 
+                        }}
+                        whileDrag={{ scale: 1.02, zIndex: 1 }}
+                        className={cn(
+                          "w-full flex items-start gap-4 p-4 rounded-2xl border transition-all text-left relative touch-pan-y cursor-grab active:cursor-grabbing",
+                          notif.isRead 
+                            ? "bg-card border-border shadow-sm" 
+                            : "bg-brand-gold/5 border-brand-gold/20 shadow-md shadow-brand-gold/5"
+                        )}
+                      >
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeNotification(notif.id);
+                          }}
+                          className="absolute top-4 right-4 p-1.5 bg-muted/50 rounded-full text-muted-foreground hover:text-brand-red transition-all active:scale-90 z-10"
+                        >
+                          <X size={14} />
+                        </button>
+
+                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", bg, color)}>
+                          <Icon size={20} />
+                        </div>
+                        <div className="flex-1 min-w-0 pr-8">
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-bold text-sm text-foreground truncate pr-2">{notif.title}</h4>
+                            <span className="text-[8px] font-bold text-muted-foreground uppercase whitespace-nowrap">{notif.time}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">{notif.description}</p>
+                        </div>
+                      </motion.div>
+                    );
+                  })
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4 text-muted-foreground">
+                      <Bell size={24} />
+                    </div>
+                    <h4 className="font-bold text-foreground">No notifications</h4>
+                    <p className="text-xs text-muted-foreground mt-1">We'll let you know when something happens.</p>
+                  </div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
       </DrawerContent>
     </Drawer>
   );

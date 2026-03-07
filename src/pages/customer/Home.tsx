@@ -10,6 +10,8 @@ import { motion } from 'framer-motion';
 import { useNotifications } from '@/context/NotificationContext';
 import { PRODUCTS } from '@/lib/products';
 import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { AnimatePresence } from 'framer-motion';
 
 const CATEGORIES = [
   { name: 'Whole', icon: '🍗', color: 'bg-orange-50', darkColor: 'dark:bg-orange-950/30' },
@@ -21,6 +23,24 @@ const CATEGORIES = [
 const CustomerHome = () => {
   const { unreadCount, addNotification } = useNotifications();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Suggestions logic
+  const suggestions = useMemo(() => {
+    if (searchQuery.length < 2) return [];
+    return PRODUCTS.filter(p => 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.category.toLowerCase().includes(searchQuery.toLowerCase())
+    ).slice(0, 5);
+  }, [searchQuery]);
+
+  // Close suggestions on click outside
+  useEffect(() => {
+    const handleClickOutside = () => setShowSuggestions(false);
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, []);
 
   const triggerTestNotification = () => {
     addNotification({
@@ -56,9 +76,55 @@ const CustomerHome = () => {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
           <Input 
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setShowSuggestions(true);
+            }}
+            onFocus={(e) => {
+              e.stopPropagation();
+              setShowSuggestions(true);
+            }}
             placeholder="Search premium cuts..." 
             className="pl-11 h-12 rounded-2xl border-none bg-white/10 text-white placeholder:text-slate-500 backdrop-blur-md focus-visible:ring-brand-gold"
           />
+
+          {/* Suggestions Dropdown */}
+          <AnimatePresence>
+            {showSuggestions && suggestions.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-2xl shadow-2xl z-[100] overflow-hidden backdrop-blur-xl"
+              >
+                <div className="p-2">
+                  {suggestions.map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/customer/product/${product.id}`);
+                        setShowSuggestions(false);
+                      }}
+                      className="w-full flex items-center gap-3 p-3 hover:bg-muted rounded-xl transition-colors text-left group"
+                    >
+                      <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-border">
+                        <img src={product.image} alt="" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground truncate group-hover:text-brand-gold transition-colors">{product.name}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-black tracking-tighter">{product.category}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-black text-foreground">₹{product.price}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 

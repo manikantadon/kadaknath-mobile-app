@@ -29,20 +29,35 @@ const ProductList = () => {
   const [activeCategory, setActiveCategory] = useState(location.state?.category || 'All');
   const [sortBy, setSortBy] = useState('popularity');
   const [isSearching, setIsSearching] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Simulate search/filter delay for better UX feel
+  // Suggestions logic
+  const suggestions = useMemo(() => {
+    if (searchQuery.length < 2) return [];
+    return PRODUCTS.filter(p => 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.category.toLowerCase().includes(searchQuery.toLowerCase())
+    ).slice(0, 5);
+  }, [searchQuery]);
+
+  // Simulate search/filter delay for better UX feel (Only for category and sort changes)
   useEffect(() => {
     setIsSearching(true);
     const timer = setTimeout(() => setIsSearching(false), 400);
     return () => clearTimeout(timer);
-  }, [searchQuery, activeCategory, sortBy]);
+  }, [activeCategory, sortBy]);
+
+  // Close suggestions on click outside
+  useEffect(() => {
+    const handleClickOutside = () => setShowSuggestions(false);
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, []);
 
   const filteredProducts = useMemo(() => {
     let result = PRODUCTS.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           product.category.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = activeCategory === 'All' || product.category === activeCategory;
-      return matchesSearch && matchesCategory;
+      return matchesCategory;
     });
 
     // Apply Sorting
@@ -52,7 +67,7 @@ const ProductList = () => {
       if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
       return (b.popularity || 0) - (a.popularity || 0);
     });
-  }, [searchQuery, activeCategory, sortBy]);
+  }, [activeCategory, sortBy]);
 
   return (
     <MobileLayout role="customer">
@@ -71,10 +86,50 @@ const ProductList = () => {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
           <Input 
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setShowSuggestions(true);
+            }}
+            onFocus={() => setShowSuggestions(true)}
             placeholder="Search Kadaknath products..." 
             className="pl-11 h-12 rounded-2xl border-none bg-white/10 text-white placeholder:text-slate-500 backdrop-blur-md focus-visible:ring-brand-gold"
           />
+
+          {/* Suggestions Dropdown */}
+          <AnimatePresence>
+            {showSuggestions && suggestions.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-2xl shadow-2xl z-[100] overflow-hidden backdrop-blur-xl"
+              >
+                <div className="p-2">
+                  {suggestions.map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => {
+                        navigate(`/customer/product/${product.id}`);
+                        setShowSuggestions(false);
+                      }}
+                      className="w-full flex items-center gap-3 p-3 hover:bg-muted rounded-xl transition-colors text-left group"
+                    >
+                      <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-border">
+                        <img src={product.image} alt="" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground truncate group-hover:text-brand-gold transition-colors">{product.name}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-black tracking-tighter">{product.category}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-black text-foreground">₹{product.price}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 

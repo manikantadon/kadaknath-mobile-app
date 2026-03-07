@@ -22,6 +22,7 @@ interface NotificationContextType {
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   removeNotification: (id: string) => void;
+  clearAll: () => void;
   requestPermission: () => Promise<void>;
 }
 
@@ -32,9 +33,14 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   const [permissionStatus, setPermissionStatus] = useState<NotificationPermission>('default');
 
   useEffect(() => {
-    const saved = localStorage.getItem('kadaknath_notifications');
-    if (saved) {
-      setNotifications(JSON.parse(saved));
+    try {
+      const saved = localStorage.getItem('kadaknath_notifications');
+      if (saved && saved !== 'undefined') {
+        setNotifications(JSON.parse(saved));
+      }
+    } catch (err) {
+      console.error("Error loading notifications:", err);
+      localStorage.removeItem('kadaknath_notifications');
     }
     if ("Notification" in window) {
       setPermissionStatus(Notification.permission);
@@ -119,6 +125,10 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
+  const clearAll = () => {
+    setNotifications([]);
+  };
+
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
@@ -130,6 +140,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       markAsRead, 
       markAllAsRead, 
       removeNotification,
+      clearAll,
       requestPermission
     }}>
       {children}

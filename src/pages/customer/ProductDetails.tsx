@@ -1,9 +1,9 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MobileLayout from '@/components/MobileLayout';
-import { ChevronLeft, Share2, Star, ShieldCheck, MapPin, ShoppingCart, Info } from 'lucide-react';
+import { ChevronLeft, Share2, Star, ShieldCheck, MapPin, ShoppingCart, Zap, Plus, Minus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import { PRODUCTS } from '@/lib/products';
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [quantity, setQuantity] = useState(1);
 
   // Find product by id
   const product = PRODUCTS.find(p => p.id === id);
@@ -35,7 +36,6 @@ const ProductDetails = () => {
         }
       }
     } else {
-      // Fallback: Copy to clipboard
       try {
         await navigator.clipboard.writeText(window.location.href);
         showSuccess('Link copied to clipboard! 📋');
@@ -49,16 +49,20 @@ const ProductDetails = () => {
     return (
       <MobileLayout role="customer">
         <div className="flex flex-col items-center justify-center h-[80vh] px-6 text-center">
-          <h2 className="text-2xl font-bold mb-4">Product not found</h2>
+          <h2 className="text-2xl font-bold mb-4 text-foreground">Product not found</h2>
           <Button onClick={() => navigate('/customer')}>Back to Home</Button>
         </div>
       </MobileLayout>
     );
   }
 
+  const updateQty = (delta: number) => {
+    setQuantity(prev => Math.max(1, prev + delta));
+  };
+
   return (
-    <MobileLayout role="customer">
-      <div className="relative">
+    <MobileLayout role="customer" hideNav>
+      <div className="relative pb-32">
         {/* Hero Image */}
         <div className="relative h-[45vh] w-full overflow-hidden">
           <img 
@@ -69,19 +73,19 @@ const ProductDetails = () => {
               (e.target as HTMLImageElement).src = '/placeholder.svg';
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-brand-offwhite" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-background" />
           
           {/* Top Actions */}
           <div className="absolute top-12 left-6 right-6 flex justify-between items-center">
             <button 
               onClick={() => navigate(-1)}
-              className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white border border-white/20"
+              className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white border border-white/20 active:scale-95 transition-transform"
             >
               <ChevronLeft size={20} />
             </button>
             <button 
               onClick={handleShare}
-              className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white border border-white/20 active:scale-90 transition-transform"
+              className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white border border-white/20 active:scale-95 transition-transform"
             >
               <Share2 size={18} />
             </button>
@@ -93,28 +97,28 @@ const ProductDetails = () => {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-[3rem] p-8 shadow-xl shadow-black/5 border border-slate-100"
+            className="bg-card rounded-[3rem] p-8 shadow-xl shadow-black/5 border border-border"
           >
             <div className="flex justify-between items-start mb-4">
               <div>
                 <Badge className="bg-brand-gold/10 text-brand-gold border-none font-bold text-[10px] uppercase tracking-widest mb-2">
                   {product.category}
                 </Badge>
-                <h1 className="text-2xl font-display font-bold text-brand-black leading-tight">{product.name}</h1>
+                <h1 className="text-2xl font-display font-bold text-foreground leading-tight">{product.name}</h1>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-black text-brand-black">₹{product.price}</div>
-                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">per {product.unit}</div>
+                <div className="text-2xl font-black text-foreground">₹{product.price}</div>
+                <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">per {product.unit}</div>
               </div>
             </div>
 
             <div className="flex items-center gap-4 mb-8">
               <div className="flex items-center gap-1">
                 <Star size={14} className="text-brand-gold fill-brand-gold" />
-                <span className="text-sm font-bold text-brand-black">{product.rating || 0}</span>
-                <span className="text-xs text-slate-400">({product.reviews || 0} reviews)</span>
+                <span className="text-sm font-bold text-foreground">{product.rating || 0}</span>
+                <span className="text-xs text-muted-foreground">({product.reviews || 0} reviews)</span>
               </div>
-              <div className="w-[1px] h-4 bg-slate-100" />
+              <div className="w-[1px] h-4 bg-border" />
               <div className="flex items-center gap-1 text-emerald-600">
                 <ShieldCheck size={14} />
                 <span className="text-[10px] font-black uppercase tracking-widest">Certified</span>
@@ -123,8 +127,8 @@ const ProductDetails = () => {
 
             {product.description && (
               <>
-                <h3 className="font-bold text-brand-black mb-2">Description</h3>
-                <p className="text-sm text-slate-500 leading-relaxed mb-8">
+                <h3 className="font-bold text-foreground mb-2">Description</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-8">
                   {product.description}
                 </p>
               </>
@@ -132,11 +136,11 @@ const ProductDetails = () => {
 
             {/* Nutrition Grid */}
             {product.nutrition && (
-              <div className="grid grid-cols-4 gap-3 mb-8">
+              <div className="grid grid-cols-2 gap-3 mb-8">
                 {product.nutrition.map((item) => (
-                  <div key={item.label} className="bg-brand-offwhite p-3 rounded-2xl text-center">
-                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mb-1">{item.label}</div>
-                    <div className="text-xs font-black text-brand-black">{item.value}</div>
+                  <div key={item.label} className="bg-muted/30 p-4 rounded-2xl flex flex-col items-center justify-center border border-border/50">
+                    <div className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.15em] mb-1">{item.label}</div>
+                    <div className="text-sm font-black text-foreground">{item.value}</div>
                   </div>
                 ))}
               </div>
@@ -144,15 +148,15 @@ const ProductDetails = () => {
 
             {/* Farm Info */}
             {product.farm && (
-              <div className="bg-brand-black rounded-[2rem] p-6 text-white mb-8">
+              <div className="bg-brand-black dark:bg-brand-gold rounded-[2rem] p-6 text-brand-gold dark:text-brand-black mb-8 border border-white/5 shadow-lg">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-brand-gold">
+                  <div className="w-12 h-12 bg-white/10 dark:bg-black/10 rounded-2xl flex items-center justify-center">
                     <MapPin size={24} />
                   </div>
                   <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Sourced From</p>
+                    <p className="text-[10px] opacity-60 font-black uppercase tracking-widest">Sourced From</p>
                     <h4 className="font-bold text-sm">{product.farm.name}</h4>
-                    <p className="text-[10px] text-brand-gold font-medium">{product.farm.location}</p>
+                    <p className="text-[10px] font-medium">{product.farm.location}</p>
                   </div>
                 </div>
               </div>
@@ -161,23 +165,53 @@ const ProductDetails = () => {
         </div>
 
         {/* Bottom Action Bar */}
-        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-6 bg-white/80 backdrop-blur-xl border-t border-slate-100 z-50">
-          <div className="flex gap-4">
-            <div className="flex items-center bg-slate-100 rounded-2xl px-4 gap-4">
-              <button className="w-8 h-8 flex items-center justify-center font-bold text-brand-black">-</button>
-              <span className="font-black text-brand-black">1</span>
-              <button className="w-8 h-8 flex items-center justify-center font-bold text-brand-black">+</button>
+        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-6 bg-background/80 dark:bg-black/80 backdrop-blur-xl border-t border-border z-50">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center bg-muted/50 rounded-2xl p-1 gap-1 border border-border">
+                <button 
+                  onClick={() => updateQty(-1)}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-card text-foreground shadow-sm active:scale-90 transition-transform"
+                >
+                  <Minus size={16} />
+                </button>
+                <span className="font-black text-foreground w-10 text-center">{quantity}</span>
+                <button 
+                  onClick={() => updateQty(1)}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-card text-foreground shadow-sm active:scale-90 transition-transform"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Subtotal</p>
+                <p className="text-xl font-black text-foreground">₹{product.price * quantity}</p>
+              </div>
             </div>
-            <Button 
-              onClick={() => {
-                showSuccess('Added to cart!');
-                navigate('/customer/cart');
-              }}
-              className="flex-1 h-14 rounded-2xl bg-brand-black text-brand-gold hover:bg-brand-black/90 font-bold gap-3 shadow-xl shadow-brand-black/20"
-            >
-              <ShoppingCart size={20} />
-              Add to Cart
-            </Button>
+            
+            <div className="flex gap-3">
+              <Button 
+                onClick={() => {
+                  showSuccess(`${quantity} item(s) added to cart!`);
+                  navigate('/customer/cart');
+                }}
+                variant="outline"
+                className="flex-1 h-14 rounded-2xl border-2 border-brand-gold text-brand-gold dark:text-brand-gold hover:bg-brand-gold/10 font-bold gap-2"
+              >
+                <ShoppingCart size={20} />
+                Add to Cart
+              </Button>
+              <Button 
+                onClick={() => {
+                  showSuccess('Proceeding to quick checkout...');
+                  navigate('/customer/cart');
+                }}
+                className="flex-1 h-14 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-bold gap-2 border-none shadow-xl shadow-brand-gold/20"
+              >
+                <Zap size={20} fill="currentColor" />
+                Buy Now
+              </Button>
+            </div>
           </div>
         </div>
       </div>
