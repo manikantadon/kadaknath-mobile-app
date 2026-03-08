@@ -22,6 +22,11 @@ import Cart from "./pages/customer/Cart";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminOrders from "./pages/admin/Orders";
 import AdminStaff from "./pages/admin/Staff";
+import AdminProducts from "./pages/admin/Products";
+import AdminCustomers from "./pages/admin/Customers";
+import AdminDrivers from "./pages/admin/Drivers";
+import AdminAnalytics from "./pages/admin/Analytics";
+import AdminSettings from "./pages/admin/Settings";
 import DriverDeliveries from "./pages/driver/Deliveries";
 import DriverProfile from "./pages/driver/Profile";
 
@@ -64,7 +69,12 @@ const App = () => {
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/orders" element={<AdminOrders />} />
+                <Route path="/admin/products" element={<AdminProducts />} />
+                <Route path="/admin/customers" element={<AdminCustomers />} />
                 <Route path="/admin/staff" element={<AdminStaff />} />
+                <Route path="/admin/drivers" element={<AdminDrivers />} />
+                <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                <Route path="/admin/settings" element={<AdminSettings />} />
 
                 {/* Driver Routes */}
                 <Route path="/driver" element={<DriverDeliveries />} />
