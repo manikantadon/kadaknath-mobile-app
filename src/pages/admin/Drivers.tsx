@@ -3,15 +3,36 @@
 import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { driversApi, Driver } from '@/lib/api/drivers.api';
-import { Truck, Search, Plus, Pencil, UserX, Phone, Star, Package } from 'lucide-react';
+import { Truck, Search, Plus, Pencil, UserX, Phone, Star, Package, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { showSuccess } from '@/utils/toast';
+import { Label } from '@/components/ui/label';
+import { showSuccess, showError } from '@/utils/toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const AdminDrivers = () => {
-  const [drivers, setDrivers] = useState(driversApi.getDrivers());
+  const [drivers, setDrivers] = useState<Driver[]>(driversApi.getDrivers());
   const [searchQuery, setSearchQuery] = useState('');
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
+  const [formData, setFormData] = useState<{
+    name: string;
+    phone: string;
+    vehicle: string;
+    licensePlate: string;
+  }>({
+    name: '',
+    phone: '',
+    vehicle: '',
+    licensePlate: '',
+  });
 
   const filteredDrivers = drivers.filter(
     (d) =>
@@ -28,6 +49,69 @@ const AdminDrivers = () => {
     }
   };
 
+  const handleAddDriver = () => {
+    if (!formData.name || !formData.phone || !formData.vehicle) {
+      showError('Please fill in all required fields');
+      return;
+    }
+
+    const driver: Driver = {
+      id: `driver-${Date.now()}`,
+      name: formData.name,
+      phone: formData.phone,
+      vehicle: formData.vehicle,
+      licensePlate: formData.licensePlate || 'N/A',
+      active: true,
+      currentOrders: 0,
+      totalDeliveries: 0,
+      rating: 5.0,
+    };
+
+    driversApi.createDriver(driver);
+    setDrivers(driversApi.getDrivers());
+    setFormData({ name: '', phone: '', vehicle: '', licensePlate: '' });
+    setAddDialogOpen(false);
+    showSuccess('Driver added successfully');
+  };
+
+  const handleEditDriver = () => {
+    if (!editingDriver || !formData.name || !formData.phone || !formData.vehicle) {
+      showError('Please fill in all required fields');
+      return;
+    }
+
+    const updated = driversApi.updateDriver(editingDriver.id, {
+      name: formData.name,
+      phone: formData.phone,
+      vehicle: formData.vehicle,
+      licensePlate: formData.licensePlate,
+    });
+
+    if (updated) {
+      setDrivers(driversApi.getDrivers());
+      showSuccess('Driver updated successfully');
+    }
+    setEditingDriver(null);
+    setFormData({ name: '', phone: '', vehicle: '', licensePlate: '' });
+    setEditDialogOpen(false);
+  };
+
+  const openEditDialog = (driver: Driver) => {
+    setEditingDriver(driver);
+    setFormData({
+      name: driver.name,
+      phone: driver.phone,
+      vehicle: driver.vehicle,
+      licensePlate: driver.licensePlate || '',
+    });
+    setEditDialogOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData({ name: '', phone: '', vehicle: '', licensePlate: '' });
+    setEditingDriver(null);
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -37,11 +121,99 @@ const AdminDrivers = () => {
             <h1 className="text-2xl font-display font-bold text-foreground">Drivers</h1>
             <p className="text-muted-foreground text-sm">Manage delivery partners</p>
           </div>
-          <Button className="h-11 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-bold gap-2">
+          <Button
+            onClick={() => {
+              setAddDialogOpen(true);
+              resetForm();
+            }}
+            className="h-11 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-bold gap-2"
+          >
             <Plus size={18} />
             Add Driver
           </Button>
         </div>
+
+        {/* Add/Edit Driver Dialog */}
+        <Dialog open={addDialogOpen || editDialogOpen} onOpenChange={(open) => {
+          if (!open) {
+            setAddDialogOpen(false);
+            setEditDialogOpen(false);
+            resetForm();
+          }
+        }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-display font-bold">
+                {editDialogOpen ? 'Edit Driver' : 'Add Driver'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                  Full Name *
+                </Label>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Enter driver name"
+                  className="h-11 rounded-xl border-border bg-muted/30"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                  Phone Number *
+                </Label>
+                <Input
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+91 98765 43210"
+                  className="h-11 rounded-xl border-border bg-muted/30"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                  Vehicle Type *
+                </Label>
+                <Input
+                  value={formData.vehicle}
+                  onChange={(e) => setFormData({ ...formData, vehicle: e.target.value })}
+                  placeholder="e.g., Motorcycle, Scooter, Bicycle"
+                  className="h-11 rounded-xl border-border bg-muted/30"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                  License Plate
+                </Label>
+                <Input
+                  value={formData.licensePlate}
+                  onChange={(e) => setFormData({ ...formData, licensePlate: e.target.value })}
+                  placeholder="MH 01 AB 1234 (optional)"
+                  className="h-11 rounded-xl border-border bg-muted/30"
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button
+                  onClick={() => {
+                    setAddDialogOpen(false);
+                    setEditDialogOpen(false);
+                    resetForm();
+                  }}
+                  variant="outline"
+                  className="flex-1 h-11 rounded-xl"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={editDialogOpen ? handleEditDriver : handleAddDriver}
+                  className="flex-1 h-11 rounded-xl bg-brand-gold text-brand-black font-bold"
+                >
+                  {editDialogOpen ? 'Update Driver' : 'Add Driver'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Search */}
         <div className="relative">
@@ -147,6 +319,7 @@ const AdminDrivers = () => {
                   {driver.active ? 'Deactivate' : 'Activate'}
                 </Button>
                 <Button
+                  onClick={() => openEditDialog(driver)}
                   variant="outline"
                   className="h-10 w-10 rounded-xl border-border"
                 >

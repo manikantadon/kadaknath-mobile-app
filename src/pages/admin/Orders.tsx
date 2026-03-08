@@ -1,7 +1,8 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
+import AdminLayout from '../../components/admin/AdminLayout';
 import { ordersApi } from '@/lib/api/orders.api';
 import { driversApi } from '@/lib/api/drivers.api';
 import { Order, OrderStatus } from '@/lib/orders';
@@ -504,7 +505,7 @@ const AdminOrders = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </AdminLayout>
   );
 };
 

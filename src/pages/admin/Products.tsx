@@ -20,8 +20,24 @@ import { cn } from '@/lib/utils';
 const AdminProducts = () => {
   const [products, setProducts] = useState(productsApi.getProducts());
   const [searchQuery, setSearchQuery] = useState('');
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    price: number;
+    stock: number;
+    category: string;
+    unit: string;
+  }>({
+    name: '',
+    description: '',
+    price: 0,
+    stock: 0,
+    category: '',
+    unit: 'kg',
+  });
 
   const filteredProducts = products.filter(
     (p) =>
@@ -44,6 +60,71 @@ const AdminProducts = () => {
     }
   };
 
+  const handleAddProduct = () => {
+    if (!formData.name || !formData.price || !formData.category) {
+      showError('Please fill in required fields');
+      return;
+    }
+
+    const product = productsApi.createProduct({
+      name: formData.name,
+      description: formData.description,
+      price: formData.price,
+      stock: formData.stock,
+      image: '/placeholder.svg',
+      category: formData.category,
+      active: true,
+      unit: formData.unit,
+    });
+
+    setProducts(productsApi.getProducts());
+    setFormData({ name: '', description: '', price: 0, stock: 0, category: '', unit: 'kg' });
+    setAddDialogOpen(false);
+    showSuccess('Product added successfully');
+  };
+
+  const handleEditProduct = () => {
+    if (!editingProduct || !formData.name || !formData.price || !formData.category) {
+      showError('Please fill in required fields');
+      return;
+    }
+
+    const updated = productsApi.updateProduct(editingProduct.id, {
+      name: formData.name,
+      description: formData.description,
+      price: formData.price,
+      stock: formData.stock,
+      category: formData.category,
+      unit: formData.unit,
+    });
+
+    if (updated) {
+      setProducts(productsApi.getProducts());
+      showSuccess('Product updated successfully');
+    }
+    setEditingProduct(null);
+    setFormData({ name: '', description: '', price: 0, stock: 0, category: '', unit: 'kg' });
+    setEditDialogOpen(false);
+  };
+
+  const openEditDialog = (product: Product) => {
+    setEditingProduct(product);
+    setFormData({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      stock: product.stock,
+      category: product.category,
+      unit: product.unit,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData({ name: '', description: '', price: 0, stock: 0, category: '', unit: 'kg' });
+    setEditingProduct(null);
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -53,23 +134,131 @@ const AdminProducts = () => {
             <h1 className="text-2xl font-display font-bold text-foreground">Products</h1>
             <p className="text-muted-foreground text-sm">Manage your product inventory</p>
           </div>
-          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-            <DialogTrigger asChild>
-              <Button className="h-11 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-bold gap-2">
-                <Plus size={18} />
-                Add Product
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Add New Product</DialogTitle>
-              </DialogHeader>
-              <div className="text-center text-muted-foreground py-8">
-                Product form coming soon...
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button
+            onClick={() => {
+              setAddDialogOpen(true);
+              resetForm();
+            }}
+            className="h-11 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-bold gap-2"
+          >
+            <Plus size={18} />
+            Add Product
+          </Button>
         </div>
+
+        {/* Add/Edit Product Dialog */}
+        <Dialog open={addDialogOpen || editDialogOpen} onOpenChange={(open) => {
+          if (!open) {
+            setAddDialogOpen(false);
+            setEditDialogOpen(false);
+            resetForm();
+          }
+        }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-display font-bold">
+                {editDialogOpen ? 'Edit Product' : 'Add New Product'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                  Product Name *
+                </Label>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="e.g., Kadaknath Whole"
+                  className="h-11 rounded-xl border-border bg-muted/30"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                  Description
+                </Label>
+                <Input
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Product description"
+                  className="h-11 rounded-xl border-border bg-muted/30"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    Price (₹) *
+                  </Label>
+                  <Input
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })}
+                    placeholder="0"
+                    className="h-11 rounded-xl border-border bg-muted/30"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    Stock *
+                  </Label>
+                  <Input
+                    type="number"
+                    value={formData.stock}
+                    onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
+                    placeholder="0"
+                    className="h-11 rounded-xl border-border bg-muted/30"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    Category *
+                  </Label>
+                  <Input
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    placeholder="e.g., Whole Chicken"
+                    className="h-11 rounded-xl border-border bg-muted/30"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    Unit
+                  </Label>
+                  <Select value={formData.unit} onValueChange={(value) => setFormData({ ...formData, unit: value })}>
+                    <SelectTrigger className="h-11 rounded-xl border-border bg-muted/30">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="kg">kg</SelectItem>
+                      <SelectItem value="pack">pack</SelectItem>
+                      <SelectItem value="pcs">pcs</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button
+                  onClick={() => {
+                    setAddDialogOpen(false);
+                    setEditDialogOpen(false);
+                    resetForm();
+                  }}
+                  variant="outline"
+                  className="flex-1 h-11 rounded-xl"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={editDialogOpen ? handleEditProduct : handleAddProduct}
+                  className="flex-1 h-11 rounded-xl bg-brand-gold text-brand-black font-bold"
+                >
+                  {editDialogOpen ? 'Update Product' : 'Add Product'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Search */}
         <div className="relative">
@@ -149,7 +338,7 @@ const AdminProducts = () => {
                     )}
                   </Button>
                   <Button
-                    onClick={() => setEditingProduct(product)}
+                    onClick={() => openEditDialog(product)}
                     variant="outline"
                     size="sm"
                     className="h-10 w-10 rounded-xl font-bold shrink-0"
@@ -255,7 +444,7 @@ const AdminProducts = () => {
                           )}
                         </Button>
                         <Button
-                          onClick={() => setEditingProduct(product)}
+                          onClick={() => openEditDialog(product)}
                           variant="ghost"
                           size="sm"
                           className="h-8 px-3 rounded-lg text-muted-foreground hover:bg-muted/50 font-bold text-xs"
