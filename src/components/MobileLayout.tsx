@@ -4,7 +4,6 @@ import React from 'react';
 import { Home, Search, ShoppingBag, User, ShieldCheck, Truck } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { haptics } from '@/utils/haptics';
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -64,13 +63,11 @@ const MobileLayout = ({ children, role, hideNav = false }: MobileLayoutProps) =>
       if (isRightEdge) {
         // Right corner double click -> Next
         if (currentIndex < currentNav.length - 1) {
-          haptics.mediumTap();
           navigate(currentNav[currentIndex + 1].path);
         }
       } else if (isLeftEdge) {
         // Left corner double click -> Previous
         if (currentIndex > 0) {
-          haptics.mediumTap();
           navigate(currentNav[currentIndex - 1].path);
         }
       }
@@ -97,7 +94,6 @@ const MobileLayout = ({ children, role, hideNav = false }: MobileLayoutProps) =>
               <Link
                 key={item.path}
                 to={item.path}
-                onClick={() => haptics.lightTap()}
                 className={cn(
                   "flex flex-col items-center gap-1 transition-all duration-300",
                   isActive ? "text-brand-gold scale-110" : "text-slate-500 dark:text-slate-400 hover:text-slate-300"

@@ -27,7 +27,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
 import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
-import { haptics } from '@/utils/haptics';
 
 const BATCH_DATA = {
   id: "KP-JH-9021",
@@ -96,13 +95,11 @@ const Traceability = () => {
   const startCamera = async () => {
     // 1. Check if the context is secure (HTTPS or Localhost)
     if (!window.isSecureContext) {
-      haptics.error();
       showError("Security Error: Camera only works on HTTPS connections.");
       return;
     }
 
     try {
-      haptics.lightTap();
       stopCamera();
       setIsCameraActive(true); // Show the UI immediately
 
@@ -122,7 +119,6 @@ const Traceability = () => {
         handleStreamSuccess(fallbackStream);
       } catch (fallbackErr: any) {
         setIsCameraActive(false);
-        haptics.error();
         if (fallbackErr.name === 'NotAllowedError' || fallbackErr.name === 'PermissionDeniedError') {
           showError("Permission Denied: Please reset camera permissions in browser settings.");
         } else if (fallbackErr.name === 'NotFoundError') {
@@ -162,7 +158,6 @@ const Traceability = () => {
   }, []);
 
   const handleSimulatedScan = () => {
-    haptics.success();
     stopCamera();
     setTimeout(() => {
       setActiveTab('result');
@@ -177,7 +172,6 @@ const Traceability = () => {
           <div className="flex items-center gap-4 mb-6">
             <button
               onClick={() => {
-                haptics.lightTap();
                 setActiveTab('scan');
               }}
               className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white backdrop-blur-md border border-white/10 active:scale-95 transition-transform"
@@ -222,8 +216,8 @@ const Traceability = () => {
                   {BATCH_DATA.farm}
                 </p>
               </div>
-              <button 
-                onClick={() => haptics.lightTap()}
+              <button
+                onClick={() => {}}
                 className="ml-auto w-10 h-10 bg-muted rounded-xl flex items-center justify-center text-brand-black dark:text-brand-gold"
               >
                 <ExternalLink size={18} />
@@ -274,7 +268,6 @@ const Traceability = () => {
           <Button
             className="w-full h-14 rounded-2xl bg-brand-black dark:bg-brand-gold text-brand-gold dark:text-brand-black font-bold gap-3 my-8 border-none shadow-xl active:scale-95 transition-transform"
             onClick={() => {
-              haptics.mediumTap();
               window.print();
             }}
           >
@@ -335,9 +328,8 @@ const Traceability = () => {
                 Tap to Scan Batch
               </button>
 
-              <button 
+              <button
                 onClick={() => {
-                  haptics.lightTap();
                   stopCamera();
                 }}
                 className="absolute top-4 right-4 w-8 h-8 bg-black/50 rounded-full flex items-center justify-center text-white backdrop-blur-md z-20"
@@ -365,9 +357,8 @@ const Traceability = () => {
                   <Zap size={18} fill="currentColor" className="mr-2" />
                   Capture
                 </Button>
-                <Button 
+                <Button
                   onClick={() => {
-                    haptics.mediumTap();
                     stopCamera();
                   }}
                   variant="outline"
@@ -394,7 +385,6 @@ const Traceability = () => {
               <Button
                 onClick={() => {
                   if (batchId) {
-                    haptics.success();
                     setActiveTab('result');
                     showSuccess("Batch verified!");
                   }
