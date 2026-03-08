@@ -3,7 +3,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Info } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Product } from '@/lib/products';
@@ -47,20 +47,12 @@ const ProductCard = ({ product }: { product: Product }) => {
           <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">/ {product.unit}</span>
         </div>
         <div className="flex gap-2">
-          <Button 
+          <Button
             onClick={() => navigate('/customer/cart')}
             className="flex-1 rounded-xl bg-brand-gold hover:bg-brand-gold/90 text-brand-black font-bold gap-2 h-10 border-none shadow-lg shadow-brand-gold/20"
           >
             <ShoppingCart size={16} />
             Add
-          </Button>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="rounded-xl h-10 w-10 border-slate-200 dark:border-white/10 text-muted-foreground"
-            onClick={() => navigate(`/customer/product/${product.id}`)}
-          >
-            <Info size={16} />
           </Button>
         </div>
       </div>

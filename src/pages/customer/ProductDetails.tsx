@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { showSuccess } from '@/utils/toast';
 import { PRODUCTS } from '@/lib/products';
-import { haptics } from '@/utils/haptics';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -191,9 +190,8 @@ const ProductDetails = () => {
             </div>
             
             <div className="flex gap-3">
-              <Button 
+              <Button
                 onClick={() => {
-                  haptics.success();
                   showSuccess(`${quantity} item(s) added to cart!`);
                   navigate('/customer/cart');
                 }}
@@ -203,10 +201,9 @@ const ProductDetails = () => {
                 <ShoppingCart size={20} />
                 Add to Cart
               </Button>
-              <Button 
+              <Button
                 onClick={() => {
-                  haptics.impact();
-                  showSuccess('Proceeding to quick checkout...');
+                  showSuccess('Proceeding to checkout...');
                   navigate('/customer/cart');
                 }}
                 className="flex-1 h-14 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-bold gap-2 border-none shadow-xl shadow-brand-gold/20"

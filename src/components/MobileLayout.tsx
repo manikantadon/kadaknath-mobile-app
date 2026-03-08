@@ -4,7 +4,6 @@ import React from 'react';
 import { Home, Search, ShoppingBag, User, ShieldCheck, Truck } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { haptics } from '@/utils/haptics';
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -45,7 +44,17 @@ const MobileLayout = ({ children, role, hideNav = false }: MobileLayoutProps) =>
   const handleDoubleClick = (e: React.MouseEvent | React.TouchEvent) => {
     // Basic double tap/click detection
     const now = Date.now();
-    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+    let clientX: number;
+
+    if ('touches' in e && e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+    } else if ('clientX' in e) {
+      clientX = (e as React.MouseEvent).clientX;
+    } else {
+      setLastTap(null);
+      return;
+    }
+
     const screenWidth = window.innerWidth;
 
     const isLeftEdge = clientX < screenWidth * edgeThreshold;
@@ -60,17 +69,15 @@ const MobileLayout = ({ children, role, hideNav = false }: MobileLayoutProps) =>
     if (lastTap && (now - lastTap.time) < doubleTapDelay) {
       // Double tap detected
       const currentIndex = currentNav.findIndex(item => item.path === location.pathname);
-      
+
       if (isRightEdge) {
         // Right corner double click -> Next
         if (currentIndex < currentNav.length - 1) {
-          haptics.mediumTap();
           navigate(currentNav[currentIndex + 1].path);
         }
       } else if (isLeftEdge) {
         // Left corner double click -> Previous
         if (currentIndex > 0) {
-          haptics.mediumTap();
           navigate(currentNav[currentIndex - 1].path);
         }
       }
@@ -97,7 +104,6 @@ const MobileLayout = ({ children, role, hideNav = false }: MobileLayoutProps) =>
               <Link
                 key={item.path}
                 to={item.path}
-                onClick={() => haptics.lightTap()}
                 className={cn(
                   "flex flex-col items-center gap-1 transition-all duration-300",
                   isActive ? "text-brand-gold scale-110" : "text-slate-500 dark:text-slate-400 hover:text-slate-300"

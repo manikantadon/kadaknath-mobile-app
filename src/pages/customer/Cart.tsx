@@ -2,289 +2,268 @@
 
 import React, { useState } from 'react';
 import MobileLayout from '@/components/MobileLayout';
-import { ChevronLeft, Trash2, Plus, Minus, CreditCard, MapPin, ChevronRight, Sparkles, Check, Navigation, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ShoppingCart, Plus, Minus, Trash2, CreditCard, MapPin, Phone, User } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+import { PRODUCTS } from '@/lib/products';
+import { useOrders } from '@/hooks/useOrders';
+import { OrderItem } from '@/lib/orders';
 
-const DEFAULT_ADDRESSES = [
-  { id: '1', label: 'Home', address: 'Sector 45, Gurgaon, HR 122003', isDefault: true },
-  { id: '2', label: 'Office', address: 'Unitech Cyber Park, Sector 39, Gurgaon', isDefault: false },
-];
+interface CartItem {
+  productId: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
 
-const Cart = () => {
+const CustomerCart = () => {
   const navigate = useNavigate();
-  const [savedAddresses, setSavedAddresses] = useState(DEFAULT_ADDRESSES);
-  const [address, setAddress] = useState(DEFAULT_ADDRESSES[0]);
-  const [isAddressDrawerOpen, setIsAddressDrawerOpen] = useState(false);
-  const [isLocating, setIsLocating] = useState(false);
-  
-  const [items, setItems] = useState([
-    { id: '1', name: 'Premium Kadaknath Whole', price: 1200, qty: 1, image: 'https://images.unsplash.com/photo-1587593810167-a84920ea0781?auto=format&fit=crop&q=80&w=200' },
-    { id: '2', name: 'Kadaknath Eggs (Case)', price: 450, qty: 2, image: 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&q=80&w=200' },
+  const { createOrderAction } = useOrders({ type: 'customer', customerId: 'customer' });
+  const [cartItems, setCartItems] = useState<CartItem[]>([
+    { productId: 'kadaknath-whole', name: 'Premium Kadaknath Whole', price: 850, quantity: 1 },
   ]);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [address, setAddress] = useState('123 Main Street, Apt 4B, Mumbai, Maharashtra 400001');
+  const [phone, setPhone] = useState('+91 98765 43210');
 
-  const handleGetCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      showError("Geolocation is not supported by your browser");
-      return;
-    }
-
-    setIsLocating(true);
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          // Using OpenStreetMap Nominatim (Free, No API Key required for demo)
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
-          );
-          const data = await response.json();
-          
-          if (data && data.display_name) {
-            const newAddress = {
-              id: Date.now().toString(),
-              label: `Location ${savedAddresses.length + 1}`,
-              address: data.display_name,
-              isDefault: false
-            };
-            
-            // Save to list and select it
-            setSavedAddresses(prev => [newAddress, ...prev]);
-            setAddress(newAddress);
-            setIsAddressDrawerOpen(false);
-            showSuccess("New location saved and selected! 📍");
-          }
-        } catch (err) {
-          showError("Failed to fetch address details");
-        } finally {
-          setIsLocating(false);
-        }
-      },
-      (error) => {
-        setIsLocating(false);
-        showError("Permission denied or location unavailable");
-      }
+  const updateQty = (productId: string, delta: number) => {
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.productId === productId
+          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+          : item
+      ).filter((item) => item.quantity > 0)
     );
   };
 
-  const subtotal = items.reduce((acc, item) => acc + (item.price * item.qty), 0);
-  const delivery = 50;
-  const total = subtotal + delivery;
-
-  const updateQty = (id: string, delta: number) => {
-    setItems(items.map(item => 
-      item.id === id ? { ...item, qty: Math.max(1, item.qty + delta) } : item
-    ));
+  const removeItem = (productId: string) => {
+    setCartItems((prev) => prev.filter((item) => item.productId !== productId));
+    showSuccess('Item removed from cart');
   };
 
-  const removeItem = (id: string) => {
-    setItems(items.filter(item => item.id !== id));
+  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  const handleCheckout = async () => {
+    if (!address || !phone) {
+      showError('Please fill in all delivery details');
+      return;
+    }
+
+    const orderItems: OrderItem[] = cartItems.map((item) => ({
+      productId: item.productId,
+      name: item.name,
+      quantity: item.quantity,
+      price: item.price,
+    }));
+
+    const order = await createOrderAction('customer', 'John Doe', orderItems, address, phone);
+    if (order) {
+      showSuccess(`Order ${order.id} placed successfully!`);
+      setCartItems([]);
+      setShowCheckout(false);
+      navigate('/customer/orders');
+    }
   };
+
+  if (cartItems.length === 0) {
+    return (
+      <MobileLayout role="customer">
+        <div className="px-6 pt-8 flex flex-col items-center justify-center min-h-[80vh]">
+          <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-6">
+            <ShoppingCart size={40} className="text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground mb-2">Your cart is empty</h2>
+          <p className="text-muted-foreground text-sm mb-6 text-center">
+            Add some premium Kadaknath products to get started
+          </p>
+          <Button
+            onClick={() => navigate('/customer')}
+            className="h-12 rounded-2xl bg-brand-black dark:bg-brand-gold text-brand-gold dark:text-brand-black font-bold"
+          >
+            Browse Products
+          </Button>
+        </div>
+      </MobileLayout>
+    );
+  }
+
+  if (showCheckout) {
+    return (
+      <MobileLayout role="customer">
+        <div className="px-6 pt-8 pb-24">
+          <button
+            onClick={() => setShowCheckout(false)}
+            className="mb-6 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <MapPin size={16} className="rotate-180" />
+            <span className="font-bold text-sm">Back to Cart</span>
+          </button>
+
+          <h1 className="text-2xl font-display font-bold text-foreground mb-2">Delivery Details</h1>
+          <p className="text-muted-foreground text-sm mb-6">Enter your delivery information</p>
+
+          <div className="space-y-4 mb-6">
+            <div className="bg-card rounded-2xl p-5 border border-border">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold">
+                  <User size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    Customer
+                  </p>
+                  <p className="font-bold text-foreground">John Doe</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">
+                    Delivery Address
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                    <Input
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="Enter delivery address"
+                      className="pl-11 h-12 rounded-2xl border-border bg-muted/30"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                    <Input
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="Enter phone number"
+                      className="pl-11 h-12 rounded-2xl border-border bg-muted/30"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-card rounded-2xl p-5 border border-border">
+              <h3 className="font-bold text-foreground mb-4">Order Summary</h3>
+              <div className="space-y-3">
+                {cartItems.map((item) => (
+                  <div key={item.productId} className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-sm text-foreground">{item.name}</p>
+                      <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                    </div>
+                    <span className="font-bold text-foreground">₹{item.price * item.quantity}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 pt-4 border-t border-border flex justify-between items-center">
+                <span className="font-bold text-muted-foreground">Total</span>
+                <span className="text-xl font-black text-foreground">₹{total}</span>
+              </div>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleCheckout}
+            className="w-full h-14 rounded-2xl bg-brand-black dark:bg-brand-gold text-brand-gold dark:text-brand-black font-bold gap-3 shadow-xl"
+          >
+            <CreditCard size={20} />
+            Place Order (₹{total})
+          </Button>
+        </div>
+      </MobileLayout>
+    );
+  }
 
   return (
-    <MobileLayout role="customer">
+    <MobileLayout role="customer" hideNav>
       <div className="px-6 pt-8 pb-32">
-        <header className="flex items-center justify-between mb-8">
-          <button 
-            onClick={() => navigate(-1)}
-            className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-slate-100 shadow-sm"
-          >
-            <ChevronLeft size={20} className="text-brand-black" />
-          </button>
-          <h1 className="text-xl font-display font-bold text-brand-black">My Cart</h1>
-          <div className="w-10" />
-        </header>
+        <h1 className="text-2xl font-display font-bold text-foreground mb-2">My Cart</h1>
+        <p className="text-muted-foreground text-sm mb-6">{cartItems.length} item(s)</p>
 
-        {items.length > 0 ? (
-          <>
-            <div className="space-y-4 mb-8">
-              <AnimatePresence>
-                {items.map((item) => (
-                  <motion.div 
-                    key={item.id}
-                    layout
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className="bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm flex gap-4"
-                  >
-                    <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 flex flex-col justify-between py-1">
-                      <div className="flex justify-between items-start">
-                        <h3 className="text-sm font-bold text-brand-black leading-tight">{item.name}</h3>
-                        <button onClick={() => removeItem(item.id)} className="text-slate-300 hover:text-brand-red">
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-black text-brand-black">₹{item.price * item.qty}</span>
-                        <div className="flex items-center bg-brand-offwhite rounded-xl px-2 py-1 gap-3">
-                          <button onClick={() => updateQty(item.id, -1)} className="text-slate-400"><Minus size={14} /></button>
-                          <span className="text-xs font-black text-brand-black w-4 text-center">{item.qty}</span>
-                          <button onClick={() => updateQty(item.id, 1)} className="text-slate-400"><Plus size={14} /></button>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-
-            {/* Delivery Info */}
-            <div className="space-y-3 mb-8">
-              <Drawer open={isAddressDrawerOpen} onOpenChange={setIsAddressDrawerOpen}>
-                <DrawerTrigger asChild>
-                  <button className="w-full text-left bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between active:scale-[0.98] transition-transform">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold">
-                        <MapPin size={20} />
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Delivery Address</p>
-                        <p className="text-xs font-bold text-brand-black truncate max-w-[180px]">
-                          {address.label}: {address.address}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-[10px] font-black uppercase text-brand-gold">Change</span>
-                      <ChevronRight size={18} className="text-slate-300" />
-                    </div>
-                  </button>
-                </DrawerTrigger>
-                <DrawerContent className="bg-brand-offwhite border-none rounded-t-[3rem]">
-                  <div className="mx-auto w-12 h-1.5 bg-slate-200 rounded-full mt-4 mb-6" />
-                  <DrawerHeader className="px-8 text-left">
-                    <DrawerTitle className="text-2xl font-display font-bold text-brand-black">Select Address</DrawerTitle>
-                    <p className="text-sm text-slate-400">Choose where you want your order delivered.</p>
-                  </DrawerHeader>
-                  <div className="p-8 space-y-4">
-                    <Button 
-                      onClick={handleGetCurrentLocation}
-                      disabled={isLocating}
-                      className="w-full h-14 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-black gap-3 shadow-lg shadow-brand-gold/20 mb-2 border-none"
-                    >
-                      {isLocating ? (
-                        <Loader2 size={20} className="animate-spin" />
-                      ) : (
-                        <Navigation size={20} fill="currentColor" />
-                      )}
-                      {isLocating ? 'Fetching Location...' : 'Use Current Location'}
-                    </Button>
-
-                    <div className="flex items-center gap-4 my-6">
-                      <div className="h-[1px] flex-1 bg-slate-100" />
-                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Or Select Saved</span>
-                      <div className="h-[1px] flex-1 bg-slate-100" />
-                    </div>
-
-                    {savedAddresses.map((addr) => (
-                      <button
-                        key={addr.id}
-                        onClick={() => {
-                          setAddress(addr);
-                          setIsAddressDrawerOpen(false);
-                          showSuccess(`Address changed to ${addr.label}`);
-                        }}
-                        className={`w-full p-5 rounded-[2rem] border text-left transition-all flex justify-between items-center ${
-                          address.id === addr.id 
-                            ? 'bg-brand-black border-brand-black text-white shadow-xl shadow-black/10' 
-                            : 'bg-white border-slate-100 text-brand-black hover:border-brand-gold/50'
-                        }`}
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-bold text-sm">{addr.label}</span>
-                            {addr.isDefault && (
-                              <span className={`text-[8px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-full ${
-                                address.id === addr.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'
-                              }`}>Default</span>
-                            )}
-                          </div>
-                          <p className={`text-xs ${address.id === addr.id ? 'text-slate-400' : 'text-slate-500'}`}>
-                            {addr.address}
-                          </p>
-                        </div>
-                        {address.id === addr.id && (
-                          <div className="w-8 h-8 bg-brand-gold rounded-full flex items-center justify-center text-brand-black">
-                            <Check size={16} strokeWidth={3} />
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                    <Button variant="outline" className="w-full h-14 rounded-2xl border-dashed border-slate-200 text-slate-400 font-bold gap-2">
-                      <Plus size={18} />
-                      Add New Address
-                    </Button>
-                  </div>
-                </DrawerContent>
-              </Drawer>
-
-              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-brand-black/5 rounded-xl flex items-center justify-center text-brand-black">
-                    <CreditCard size={20} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Payment Method</p>
-                    <p className="text-xs font-bold text-brand-black">Visa ending in 4242</p>
-                  </div>
-                </div>
-                <ChevronRight size={18} className="text-slate-300" />
-              </div>
-            </div>
-
-            {/* Summary */}
-            <div className="bg-brand-black rounded-[2.5rem] p-8 text-white shadow-2xl shadow-brand-black/20">
-              <div className="space-y-4 mb-6">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Subtotal</span>
-                  <span className="font-bold">₹{subtotal}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Delivery Fee</span>
-                  <span className="font-bold">₹{delivery}</span>
-                </div>
-                <div className="h-[1px] bg-white/10" />
-                <div className="flex justify-between text-lg">
-                  <span className="font-display font-bold">Total</span>
-                  <span className="font-display font-bold text-brand-gold">₹{total}</span>
-                </div>
-              </div>
-              
-              <Button 
-                onClick={() => {
-                  showSuccess('Order placed successfully!');
-                  navigate('/customer/orders');
-                }}
-                className="w-full h-14 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-bold gap-3 border-none"
+        <div className="space-y-4 mb-6">
+          {cartItems.map((item) => {
+            const product = PRODUCTS.find((p) => p.id === item.productId);
+            return (
+              <motion.div
+                key={item.productId}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-card rounded-2xl p-4 border border-border flex gap-4"
               >
-                <Sparkles size={20} />
-                Place Order
-              </Button>
-            </div>
-          </>
-        ) : (
-          <div className="text-center py-20">
-            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Trash2 size={32} className="text-slate-300" />
-            </div>
-            <h3 className="text-lg font-bold text-brand-black mb-2">Your cart is empty</h3>
-            <p className="text-slate-400 text-sm mb-8">Looks like you haven't added any premium cuts yet.</p>
-            <Button onClick={() => navigate('/customer')} className="bg-brand-black text-brand-gold rounded-xl px-8">
-              Start Shopping
+                <div className="w-20 h-20 rounded-xl bg-muted overflow-hidden shrink-0">
+                  <img
+                    src={product?.image || '/placeholder.svg'}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-foreground truncate">{item.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-3">₹{item.price}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center bg-muted/50 rounded-xl p-1 gap-1">
+                      <button
+                        onClick={() => updateQty(item.productId, -1)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-card text-foreground shadow-sm active:scale-90 transition-transform"
+                      >
+                        <Minus size={14} />
+                      </button>
+                      <span className="font-black text-foreground w-8 text-center text-sm">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQty(item.productId, 1)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-card text-foreground shadow-sm active:scale-90 transition-transform"
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => removeItem(item.productId)}
+                      className="w-8 h-8 flex items-center justify-center rounded-full text-muted-foreground hover:text-brand-red hover:bg-brand-red/10 transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-6 bg-background/80 dark:bg-black/80 backdrop-blur-xl border-t border-border z-50">
+          <div className="flex items-center justify-between mb-4">
+            <span className="font-bold text-muted-foreground">Subtotal</span>
+            <span className="text-xl font-black text-foreground">₹{total}</span>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              onClick={() => navigate('/customer')}
+              variant="outline"
+              className="flex-1 h-14 rounded-2xl border-border font-bold"
+            >
+              Continue Shopping
+            </Button>
+            <Button
+              onClick={() => setShowCheckout(true)}
+              className="flex-1 h-14 rounded-2xl bg-brand-black dark:bg-brand-gold text-brand-gold dark:text-brand-black font-bold gap-2 shadow-xl"
+            >
+              <CreditCard size={20} />
+              Checkout
             </Button>
           </div>
-        )}
+        </div>
       </div>
     </MobileLayout>
   );
 };
 
-export default Cart;
+export default CustomerCart;
