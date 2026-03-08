@@ -7,35 +7,46 @@ import { Button } from '@/components/ui/button';
 import { useOrders } from '@/hooks/useOrders';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { OrderDetailsDrawer } from '@/components/orders/OrderDetailsDrawer';
+import { CancelConfirmationDialog } from '@/components/orders/CancelConfirmationDialog';
 import { Order } from '@/lib/orders';
 import { Package } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const CustomerOrders = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
 
-  const { orders, cancelOrderAction, refreshOrders } = useOrders({ type: 'customer', customerId: 'customer' });
+  const orderScope = React.useMemo(() => ({ type: 'customer' as const, customerId: 'customer' }), []);
+  const { orders, cancelOrderAction, refreshOrders } = useOrders(orderScope);
 
   const activeOrders = orders.filter((o) => !['DELIVERED', 'CANCELLED'].includes(o.status));
   const completedOrders = orders.filter((o) => ['DELIVERED', 'CANCELLED'].includes(o.status));
 
-  const requestCancelOrder = (order: Order, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleViewDetails = (order: Order) => {
+    setSelectedOrder(order);
+    setIsDrawerOpen(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
+    setTimeout(() => setSelectedOrder(null), 300);
+  };
+
+  const handleRequestCancel = (order: Order) => {
     if (order.status !== 'CREATED') {
       showError('Only orders in CREATED status can be cancelled');
       return;
     }
     setOrderToCancel(order);
-    setShowCancelDialog(true);
+    setCancelDialogOpen(true);
   };
 
-  const handleCancelOrder = async () => {
+  const handleConfirmCancel = async () => {
     if (!orderToCancel) return;
 
     const updated = await cancelOrderAction(orderToCancel.id);
@@ -43,8 +54,16 @@ const CustomerOrders = () => {
       showSuccess('Order cancelled successfully');
       refreshOrders();
     }
-    setShowCancelDialog(false);
+    setCancelDialogOpen(false);
     setOrderToCancel(null);
+  };
+
+  const handleCancelFromDrawer = () => {
+    if (selectedOrder) {
+      setOrderToCancel(selectedOrder);
+      setCancelDialogOpen(true);
+      handleCloseDrawer();
+    }
   };
 
   const displayedOrders = activeTab === 'active' ? activeOrders : completedOrders;
@@ -52,122 +71,76 @@ const CustomerOrders = () => {
   return (
     <MobileLayout role="customer">
       <div className="px-6 pt-8 pb-24">
-        <h1 className="text-2xl font-display font-bold text-foreground mb-2">My Orders</h1>
-        <p className="text-muted-foreground text-sm mb-6">Track your premium poultry deliveries.</p>
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-display font-bold text-foreground mb-2">My Orders</h1>
+          <p className="text-muted-foreground text-sm">Track your premium poultry deliveries</p>
+        </div>
 
+        {/* Tabs */}
         <Tabs defaultValue="active" className="mb-6" onValueChange={(v) => setActiveTab(v as 'active' | 'completed')}>
           <TabsList className="w-full bg-muted p-1 rounded-2xl h-12">
-            <TabsTrigger value="active" className="flex-1 rounded-xl font-bold text-xs data-[state=active]:bg-brand-black data-[state=active]:text-brand-gold">
+            <TabsTrigger value="active" className="flex-1 rounded-xl font-bold text-xs data-[state=active]:bg-brand-black data-[state=active]:text-brand-gold transition-all">
               Active ({activeOrders.length})
             </TabsTrigger>
-            <TabsTrigger value="completed" className="flex-1 rounded-xl font-bold text-xs data-[state=active]:bg-brand-black data-[state=active]:text-brand-gold">
+            <TabsTrigger value="completed" className="flex-1 rounded-xl font-bold text-xs data-[state=active]:bg-brand-black data-[state=active]:text-brand-gold transition-all">
               History ({completedOrders.length})
             </TabsTrigger>
           </TabsList>
         </Tabs>
 
+        {/* Orders List */}
         {displayedOrders.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <Package size={24} className="text-muted-foreground" />
+          <div className="text-center py-16">
+            <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-5">
+              <Package size={32} className="text-muted-foreground" />
             </div>
-            <p className="text-muted-foreground font-medium">
+            <p className="text-muted-foreground font-medium text-sm">
               {activeTab === 'active' ? 'No active orders' : 'No order history'}
             </p>
             {activeTab === 'active' && (
               <Button
                 onClick={() => navigate('/customer')}
                 variant="outline"
-                className="mt-4 h-12 rounded-2xl border-brand-gold text-brand-gold"
+                className="mt-5 h-12 rounded-2xl border-brand-gold text-brand-gold font-bold text-sm"
               >
                 Browse Products
               </Button>
             )}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {displayedOrders.map((order) => (
-              <div key={order.id} className="relative">
-                <OrderCard 
-                  order={order} 
-                  onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }}
-                  onCancel={order.status === 'CREATED' && activeTab === 'active' ? (e) => requestCancelOrder(order, e) : undefined}
-                />
-              </div>
+              <OrderCard
+                key={order.id}
+                order={order}
+                onViewDetails={() => handleViewDetails(order)}
+                onCancel={order.status === 'CREATED' && activeTab === 'active' ? () => handleRequestCancel(order) : undefined}
+              />
             ))}
           </div>
         )}
       </div>
 
+      {/* Order Details Drawer - z-[90-91] */}
       <OrderDetailsDrawer
         order={selectedOrder}
-        open={!!selectedOrder}
-        onOpenChange={(open) => !open && setSelectedOrder(null)}
-        actions={
-          selectedOrder?.status === 'CREATED'
-            ? [
-                {
-                  label: 'Cancel Order',
-                  onClick: () => {
-                    setOrderToCancel(selectedOrder);
-                    setShowCancelDialog(true);
-                    setSelectedOrder(null);
-                  },
-                  variant: 'destructive',
-                },
-              ]
-            : []
-        }
+        open={isDrawerOpen}
+        onClose={handleCloseDrawer}
+        onCancelOrder={handleCancelFromDrawer}
         showTimeline
       />
 
-      {/* Custom Confirmation Dialog */}
-      <AnimatePresence>
-        {showCancelDialog && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowCancelDialog(false)}
-              className="fixed inset-0 bg-black/80 z-[100]"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed inset-0 z-[101] flex items-center justify-center p-6 pointer-events-none"
-            >
-              <div className="bg-card rounded-[2rem] p-6 max-w-[320px] w-full border border-border shadow-xl pointer-events-auto">
-                <div className="text-center mb-6">
-                  <h3 className="text-xl font-display font-bold text-foreground mb-2">
-                    Cancel Order?
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    This action cannot be undone. Are you sure you want to cancel order{' '}
-                    <span className="font-bold text-foreground">{orderToCancel?.id}</span>?
-                  </p>
-                </div>
-                <div className="flex flex-col gap-3">
-                  <Button
-                    onClick={() => setShowCancelDialog(false)}
-                    variant="outline"
-                    className="h-12 rounded-2xl font-bold"
-                  >
-                    Keep Order
-                  </Button>
-                  <Button
-                    onClick={handleCancelOrder}
-                    className="h-12 rounded-2xl bg-brand-red text-white hover:bg-brand-red/90 font-bold"
-                  >
-                    Yes, Cancel
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      {/* Cancel Confirmation Dialog - z-[100-101] */}
+      <CancelConfirmationDialog
+        open={cancelDialogOpen}
+        orderId={orderToCancel?.id || null}
+        onConfirm={handleConfirmCancel}
+        onCancel={() => {
+          setCancelDialogOpen(false);
+          setOrderToCancel(null);
+        }}
+      />
     </MobileLayout>
   );
 };

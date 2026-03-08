@@ -32,13 +32,19 @@ export const OrderTimeline = ({ order, className }: OrderTimelineProps) => {
   const isCancelled = order.status === 'CANCELLED';
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'N/A';
+      return date.toLocaleString('en-IN', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (e) {
+      return 'N/A';
+    }
   };
 
   if (isCancelled) {

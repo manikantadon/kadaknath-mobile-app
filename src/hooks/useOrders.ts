@@ -36,15 +36,19 @@ export function useOrders(scope: { type: 'all' } | { type: 'customer'; customerI
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const scopeType = scope.type;
+  const customerId = scope.type === 'customer' ? scope.customerId : null;
+  const driverId = scope.type === 'driver' ? scope.driverId : null;
+
   const fetchOrders = useCallback(() => {
     setLoading(true);
     setError(null);
     try {
       let fetchedOrders: Order[];
-      if (scope.type === 'customer') {
-        fetchedOrders = getCustomerOrders(scope.customerId);
-      } else if (scope.type === 'driver') {
-        fetchedOrders = getDriverOrders(scope.driverId);
+      if (scopeType === 'customer' && customerId) {
+        fetchedOrders = getCustomerOrders(customerId);
+      } else if (scopeType === 'driver' && driverId) {
+        fetchedOrders = getDriverOrders(driverId);
       } else {
         fetchedOrders = getOrders();
       }
@@ -54,7 +58,7 @@ export function useOrders(scope: { type: 'all' } | { type: 'customer'; customerI
     } finally {
       setLoading(false);
     }
-  }, [scope]);
+  }, [scopeType, customerId, driverId]);
 
   useEffect(() => {
     fetchOrders();

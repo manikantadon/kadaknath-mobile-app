@@ -21,7 +21,8 @@ const DriverDeliveries = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [otpValue, setOtpValue] = useState('');
 
-  const { orders, updateStatus, refreshOrders } = useOrders({ type: 'driver', driverId: 'driver' });
+  const orderScope = React.useMemo(() => ({ type: 'driver' as const, driverId: 'driver' }), []);
+  const { orders, updateStatus, refreshOrders } = useOrders(orderScope);
 
   const handleLogout = () => {
     showSuccess('Logged out successfully');

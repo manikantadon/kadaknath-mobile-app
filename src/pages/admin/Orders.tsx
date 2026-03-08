@@ -40,7 +40,8 @@ const AdminOrders = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  const { orders, updateStatus, assignDriverAction, refreshOrders } = useOrders({ type: 'all' });
+  const orderScope = React.useMemo(() => ({ type: 'all' as const }), []);
+  const { orders, updateStatus, assignDriverAction, refreshOrders } = useOrders(orderScope);
 
   const filteredOrders = orders.filter((order) => {
     const matchesStatus = activeTab === 'all' || order.status === activeTab;
