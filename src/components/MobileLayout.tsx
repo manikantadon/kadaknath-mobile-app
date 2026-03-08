@@ -44,7 +44,17 @@ const MobileLayout = ({ children, role, hideNav = false }: MobileLayoutProps) =>
   const handleDoubleClick = (e: React.MouseEvent | React.TouchEvent) => {
     // Basic double tap/click detection
     const now = Date.now();
-    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+    let clientX: number;
+
+    if ('touches' in e && e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+    } else if ('clientX' in e) {
+      clientX = (e as React.MouseEvent).clientX;
+    } else {
+      setLastTap(null);
+      return;
+    }
+
     const screenWidth = window.innerWidth;
 
     const isLeftEdge = clientX < screenWidth * edgeThreshold;
@@ -59,7 +69,7 @@ const MobileLayout = ({ children, role, hideNav = false }: MobileLayoutProps) =>
     if (lastTap && (now - lastTap.time) < doubleTapDelay) {
       // Double tap detected
       const currentIndex = currentNav.findIndex(item => item.path === location.pathname);
-      
+
       if (isRightEdge) {
         // Right corner double click -> Next
         if (currentIndex < currentNav.length - 1) {

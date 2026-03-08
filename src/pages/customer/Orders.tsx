@@ -78,10 +78,10 @@ const CustomerOrders = () => {
           <div className="space-y-4">
             {displayedOrders.map((order) => (
               <div key={order.id} className="relative">
-                <OrderCard order={order} onClick={() => setSelectedOrder(order)} />
+                <OrderCard order={order} onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }} />
                 {order.status === 'CREATED' && activeTab === 'active' && (
                   <Button
-                    onClick={(e) => handleCancelOrder(order.id, e)}
+                    onClick={(e) => { e.stopPropagation(); handleCancelOrder(order.id, e); }}
                     variant="destructive"
                     size="sm"
                     className="absolute top-4 right-4 h-8 w-8 p-0 rounded-full"

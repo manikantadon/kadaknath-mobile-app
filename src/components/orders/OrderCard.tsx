@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 interface OrderCardProps {
   order: Order;
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent) => void;
   className?: string;
 }
 
