@@ -55,33 +55,33 @@ const AdminDrivers = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-card rounded-2xl p-5 border border-border">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold">
-                <Truck size={18} />
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold shrink-0">
+                <Truck size={16} />
               </div>
-              <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Total</span>
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-tight">Total</span>
             </div>
-            <p className="text-2xl font-black text-foreground">{drivers.length}</p>
+            <p className="text-xl lg:text-2xl font-black text-foreground">{drivers.length}</p>
           </div>
-          <div className="bg-card rounded-2xl p-5 border border-border">
+          <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500">
-                <Truck size={18} />
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 shrink-0">
+                <Truck size={16} />
               </div>
-              <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Active</span>
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-tight">Active</span>
             </div>
-            <p className="text-2xl font-black text-foreground">{drivers.filter(d => d.active).length}</p>
+            <p className="text-xl lg:text-2xl font-black text-foreground">{drivers.filter(d => d.active).length}</p>
           </div>
-          <div className="bg-card rounded-2xl p-5 border border-border">
+          <div className="bg-card rounded-2xl p-5 border border-border shadow-sm col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-500">
-                <Package size={18} />
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-500 shrink-0">
+                <Package size={16} />
               </div>
-              <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">On Duty</span>
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-tight">On Duty</span>
             </div>
-            <p className="text-2xl font-black text-foreground">{drivers.reduce((sum, d) => sum + d.currentOrders, 0)}</p>
+            <p className="text-xl lg:text-2xl font-black text-foreground">{drivers.reduce((sum, d) => sum + d.currentOrders, 0)}</p>
           </div>
         </div>
 

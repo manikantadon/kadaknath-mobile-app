@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { showSuccess } from '@/utils/toast';
+import { cn } from '@/lib/utils';
 
 interface StaffMember {
   id: string;
@@ -154,20 +155,89 @@ const AdminStaff = () => {
           </div>
         </div>
 
-        {/* Staff Table */}
+        {/* Staff List - Table for Desktop, Cards for Mobile */}
         <div className="bg-card rounded-2xl border border-border overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile View */}
+          <div className="lg:hidden divide-y divide-border">
+            {filteredStaff.map((member) => {
+              const RoleIcon = roleIcons[member.role] || UserCog;
+              return (
+                <div key={member.id} className="p-5 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-brand-gold rounded-2xl flex items-center justify-center text-brand-black font-bold text-lg">
+                        {member.name.split(' ').map((n) => n[0]).join('')}
+                      </div>
+                      <div>
+                        <p className="font-bold text-foreground">{member.name}</p>
+                        <Badge className={`${roleColors[member.role]} border-none font-bold text-[9px] uppercase mt-1`}>
+                          <RoleIcon size={10} className="mr-1" />
+                          {member.role}
+                        </Badge>
+                      </div>
+                    </div>
+                    <Badge
+                      className={
+                        member.active
+                          ? 'bg-emerald-500/20 text-emerald-500 border-none'
+                          : 'bg-slate-500/20 text-slate-500 border-none'
+                      }
+                    >
+                      {member.active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2 bg-muted/30 p-3 rounded-xl">
+                    <div className="flex items-center gap-2 text-xs text-foreground">
+                      <Mail size={12} className="text-brand-gold shrink-0" />
+                      <span className="truncate">{member.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Phone size={12} className="text-brand-gold shrink-0" />
+                      <span>{member.phone}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 h-10 rounded-xl font-bold text-xs"
+                    >
+                      <Pencil size={14} className="mr-2" />
+                      Edit
+                    </Button>
+                    <Button
+                      onClick={() => handleToggleActive(member.id)}
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "flex-1 h-10 rounded-xl font-bold text-xs",
+                        member.active ? "text-brand-red hover:bg-brand-red/10" : "text-emerald-500 hover:bg-emerald-500/10"
+                      )}
+                    >
+                      <UserX size={14} className="mr-2" />
+                      {member.active ? 'Deactivate' : 'Activate'}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop View */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-muted/30 border-b border-border">
                 <tr>
                   <th className="text-left py-4 px-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                    Member
-                  </th>
-                  <th className="text-left py-4 px-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                    Contact
+                    Staff Member
                   </th>
                   <th className="text-left py-4 px-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                     Role
+                  </th>
+                  <th className="text-left py-4 px-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    Contact
                   </th>
                   <th className="text-left py-4 px-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                     Joined
@@ -192,19 +262,7 @@ const AdminStaff = () => {
                           </div>
                           <div>
                             <p className="font-bold text-foreground text-sm">{member.name}</p>
-                            <p className="text-xs text-muted-foreground">ID: {member.id}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-xs text-foreground">
-                            <Mail size={12} className="text-brand-gold" />
-                            <span>{member.email}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Phone size={12} className="text-brand-gold" />
-                            <span>{member.phone}</span>
+                            <p className="text-xs text-muted-foreground">{member.email}</p>
                           </div>
                         </div>
                       </td>
@@ -215,7 +273,15 @@ const AdminStaff = () => {
                         </Badge>
                       </td>
                       <td className="py-4 px-6">
-                        <span className="text-sm font-medium text-foreground">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-xs text-foreground">
+                            <Phone size={12} className="text-brand-gold" />
+                            <span>{member.phone}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="text-sm text-muted-foreground">
                           {new Date(member.joinedDate).toLocaleDateString('en-IN', {
                             month: 'short',
                             day: 'numeric',
@@ -239,15 +305,19 @@ const AdminStaff = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 px-3 rounded-lg"
+                            className="h-8 px-3 rounded-lg text-muted-foreground hover:bg-muted/50 font-bold text-xs"
                           >
-                            <Pencil size={14} className="text-muted-foreground" />
+                            <Pencil size={14} className="mr-1" />
+                            Edit
                           </Button>
                           <Button
                             onClick={() => handleToggleActive(member.id)}
                             variant="ghost"
                             size="sm"
-                            className="h-8 px-3 rounded-lg text-brand-red hover:text-brand-red hover:bg-brand-red/10"
+                            className={cn(
+                              "h-8 px-3 rounded-lg font-bold text-xs",
+                              member.active ? "text-brand-red hover:bg-brand-red/10" : "text-emerald-500 hover:bg-emerald-500/10"
+                            )}
                           >
                             <UserX size={14} className="mr-1" />
                             {member.active ? 'Deactivate' : 'Activate'}

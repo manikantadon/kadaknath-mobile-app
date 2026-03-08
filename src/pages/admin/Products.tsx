@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { showSuccess, showError } from '@/utils/toast';
+import { cn } from '@/lib/utils';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState(productsApi.getProducts());
@@ -81,9 +82,95 @@ const AdminProducts = () => {
           />
         </div>
 
-        {/* Products Table */}
+        {/* Products List - Table for Desktop, Cards for Mobile */}
         <div className="bg-card rounded-2xl border border-border overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile View */}
+          <div className="lg:hidden divide-y divide-border">
+            {filteredProducts.map((product) => (
+              <div key={product.id} className="p-5 space-y-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-brand-gold/10 rounded-xl flex items-center justify-center shrink-0">
+                      <Package size={20} className="text-brand-gold" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-foreground text-sm leading-tight">{product.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="bg-muted/50 text-[8px] font-black uppercase px-1.5 py-0">
+                          {product.category}
+                        </Badge>
+                        <span className="text-[10px] text-muted-foreground font-medium">{product.unit}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <Badge
+                    className={cn(
+                      "font-bold text-[9px] uppercase",
+                      product.active ? 'bg-emerald-500/20 text-emerald-500 border-none' : 'bg-slate-500/20 text-slate-500 border-none'
+                    )}
+                  >
+                    {product.active ? 'Active' : 'Inactive'}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 bg-muted/30 p-3 rounded-xl">
+                  <div>
+                    <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Price</p>
+                    <p className="font-bold text-foreground">₹{product.price}</p>
+                  </div>
+                  <div>
+                    <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Stock</p>
+                    <p className={cn(
+                      "font-bold",
+                      product.stock > 20 ? 'text-emerald-500' : product.stock > 0 ? 'text-amber-500' : 'text-brand-red'
+                    )}>
+                      {product.stock} units
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleToggleActive(product.id)}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-10 rounded-xl font-bold text-xs gap-2"
+                  >
+                    {product.active ? (
+                      <>
+                        <EyeOff size={14} className="text-muted-foreground" />
+                        Hide
+                      </>
+                    ) : (
+                      <>
+                        <Eye size={14} className="text-brand-gold" />
+                        Show
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => setEditingProduct(product)}
+                    variant="outline"
+                    size="sm"
+                    className="h-10 w-10 rounded-xl font-bold shrink-0"
+                  >
+                    <Pencil size={14} className="text-muted-foreground" />
+                  </Button>
+                  <Button
+                    onClick={() => handleDelete(product.id)}
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 w-10 rounded-xl font-bold shrink-0 text-brand-red hover:bg-brand-red/10"
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop View */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-muted/30 border-b border-border">
                 <tr>
@@ -112,8 +199,8 @@ const AdminProducts = () => {
                   <tr key={product.id} className="hover:bg-muted/20 transition-colors">
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-brand-gold/10 rounded-xl flex items-center justify-center">
-                          <Package size={20} className="text-brand-gold" />
+                        <div className="w-10 h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold">
+                          <Package size={16} />
                         </div>
                         <div>
                           <p className="font-bold text-foreground text-sm">{product.name}</p>
@@ -122,21 +209,27 @@ const AdminProducts = () => {
                       </div>
                     </td>
                     <td className="py-4 px-6">
-                      <Badge variant="outline" className="bg-muted/50 text-foreground text-[10px] font-bold uppercase">
+                      <Badge variant="outline" className="bg-muted/50 text-[10px] font-black uppercase">
                         {product.category}
                       </Badge>
                     </td>
                     <td className="py-4 px-6">
-                      <span className="font-bold text-foreground">₹{product.price}</span>
+                      <span className="font-black text-foreground">₹{product.price}</span>
                     </td>
                     <td className="py-4 px-6">
-                      <span className={`font-bold ${product.stock > 20 ? 'text-emerald-500' : product.stock > 0 ? 'text-amber-500' : 'text-brand-red'}`}>
+                      <span className={cn(
+                        "font-bold",
+                        product.stock > 20 ? 'text-emerald-500' : product.stock > 0 ? 'text-amber-500' : 'text-brand-red'
+                      )}>
                         {product.stock} units
                       </span>
                     </td>
                     <td className="py-4 px-6">
                       <Badge
-                        className={product.active ? 'bg-emerald-500/20 text-emerald-500 border-none' : 'bg-slate-500/20 text-slate-500 border-none'}
+                        className={cn(
+                          "font-bold text-[10px] uppercase border-none",
+                          product.active ? 'bg-emerald-500/20 text-emerald-500' : 'bg-slate-500/20 text-slate-500'
+                        )}
                       >
                         {product.active ? 'Active' : 'Inactive'}
                       </Badge>
@@ -146,30 +239,38 @@ const AdminProducts = () => {
                         <Button
                           onClick={() => handleToggleActive(product.id)}
                           variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 rounded-lg"
+                          size="sm"
+                          className="h-8 px-3 rounded-lg text-brand-gold hover:bg-brand-gold/10 font-bold text-xs"
                         >
                           {product.active ? (
-                            <EyeOff size={16} className="text-muted-foreground" />
+                            <>
+                              <EyeOff size={14} className="mr-1" />
+                              Hide
+                            </>
                           ) : (
-                            <Eye size={16} className="text-brand-gold" />
+                            <>
+                              <Eye size={14} className="mr-1" />
+                              Show
+                            </>
                           )}
                         </Button>
                         <Button
                           onClick={() => setEditingProduct(product)}
                           variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 rounded-lg"
+                          size="sm"
+                          className="h-8 px-3 rounded-lg text-muted-foreground hover:bg-muted/50 font-bold text-xs"
                         >
-                          <Pencil size={16} className="text-muted-foreground" />
+                          <Pencil size={14} className="mr-1" />
+                          Edit
                         </Button>
                         <Button
                           onClick={() => handleDelete(product.id)}
                           variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 rounded-lg text-brand-red hover:text-brand-red hover:bg-brand-red/10"
+                          size="sm"
+                          className="h-8 px-3 rounded-lg text-brand-red hover:bg-brand-red/10 font-bold text-xs"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} className="mr-1" />
+                          Delete
                         </Button>
                       </div>
                     </td>

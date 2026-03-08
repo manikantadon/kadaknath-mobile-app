@@ -60,75 +60,75 @@ const AdminAnalytics = () => {
         </div>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="border-border bg-card">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border-border bg-card shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 px-4 pt-4 space-y-0">
+              <CardTitle className="text-[10px] lg:text-sm font-black lg:font-bold text-muted-foreground uppercase tracking-widest leading-tight">
                 Total Revenue
               </CardTitle>
-              <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500">
-                <DollarSign size={18} />
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 shrink-0">
+                <DollarSign size={14} />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-black text-foreground">₹{totalRevenue.toLocaleString()}</div>
-              <div className="flex items-center gap-1 text-xs text-emerald-500 font-bold mt-1">
-                <TrendingUp size={12} />
-                +15% this month
+            <CardContent className="px-4 pb-4">
+              <div className="text-lg lg:text-2xl font-black text-foreground">₹{totalRevenue.toLocaleString()}</div>
+              <div className="flex items-center gap-1 text-[9px] text-emerald-500 font-bold mt-0.5">
+                <TrendingUp size={10} />
+                +15%
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
-                Avg Order Value
+          <Card className="border-border bg-card shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 px-4 pt-4 space-y-0">
+              <CardTitle className="text-[10px] lg:text-sm font-black lg:font-bold text-muted-foreground uppercase tracking-widest leading-tight">
+                Avg Order
               </CardTitle>
-              <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500">
-                <ShoppingBag size={18} />
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500 shrink-0">
+                <ShoppingBag size={14} />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-black text-foreground">₹{Math.round(avgOrderValue)}</div>
-              <div className="flex items-center gap-1 text-xs text-emerald-500 font-bold mt-1">
-                <TrendingUp size={12} />
-                +8% this month
+            <CardContent className="px-4 pb-4">
+              <div className="text-lg lg:text-2xl font-black text-foreground">₹{Math.round(avgOrderValue)}</div>
+              <div className="flex items-center gap-1 text-[9px] text-emerald-500 font-bold mt-0.5">
+                <TrendingUp size={10} />
+                +8%
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+          <Card className="border-border bg-card shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 px-4 pt-4 space-y-0">
+              <CardTitle className="text-[10px] lg:text-sm font-black lg:font-bold text-muted-foreground uppercase tracking-widest leading-tight">
                 Total Orders
               </CardTitle>
-              <div className="w-10 h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold">
-                <Package size={18} />
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold shrink-0">
+                <Package size={14} />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-black text-foreground">{orders.length}</div>
-              <div className="flex items-center gap-1 text-xs text-emerald-500 font-bold mt-1">
-                <TrendingUp size={12} />
-                +22% this month
+            <CardContent className="px-4 pb-4">
+              <div className="text-lg lg:text-2xl font-black text-foreground">{orders.length}</div>
+              <div className="flex items-center gap-1 text-[9px] text-emerald-500 font-bold mt-0.5">
+                <TrendingUp size={10} />
+                +22%
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
-                Total Customers
+          <Card className="border-border bg-card shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 px-4 pt-4 space-y-0">
+              <CardTitle className="text-[10px] lg:text-sm font-black lg:font-bold text-muted-foreground uppercase tracking-widest leading-tight">
+                Customers
               </CardTitle>
-              <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-500">
-                <Users size={18} />
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-500 shrink-0">
+                <Users size={14} />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-black text-foreground">{customers.length}</div>
-              <div className="flex items-center gap-1 text-xs text-emerald-500 font-bold mt-1">
-                <TrendingUp size={12} />
-                +5 new this week
+            <CardContent className="px-4 pb-4">
+              <div className="text-lg lg:text-2xl font-black text-foreground">{customers.length}</div>
+              <div className="flex items-center gap-1 text-[9px] text-emerald-500 font-bold mt-0.5">
+                <TrendingUp size={10} />
+                +5
               </div>
             </CardContent>
           </Card>
