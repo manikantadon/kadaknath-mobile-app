@@ -15,12 +15,29 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { showSuccess, showError } from '@/utils/toast';
+import { cn } from '@/lib/utils';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState(productsApi.getProducts());
   const [searchQuery, setSearchQuery] = useState('');
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    price: number;
+    stock: number;
+    category: string;
+    unit: string;
+  }>({
+    name: '',
+    description: '',
+    price: 0,
+    stock: 0,
+    category: '',
+    unit: 'kg',
+  });
 
   const filteredProducts = products.filter(
     (p) =>
@@ -43,6 +60,71 @@ const AdminProducts = () => {
     }
   };
 
+  const handleAddProduct = () => {
+    if (!formData.name || !formData.price || !formData.category) {
+      showError('Please fill in required fields');
+      return;
+    }
+
+    const product = productsApi.createProduct({
+      name: formData.name,
+      description: formData.description,
+      price: formData.price,
+      stock: formData.stock,
+      image: '/placeholder.svg',
+      category: formData.category,
+      active: true,
+      unit: formData.unit,
+    });
+
+    setProducts(productsApi.getProducts());
+    setFormData({ name: '', description: '', price: 0, stock: 0, category: '', unit: 'kg' });
+    setAddDialogOpen(false);
+    showSuccess('Product added successfully');
+  };
+
+  const handleEditProduct = () => {
+    if (!editingProduct || !formData.name || !formData.price || !formData.category) {
+      showError('Please fill in required fields');
+      return;
+    }
+
+    const updated = productsApi.updateProduct(editingProduct.id, {
+      name: formData.name,
+      description: formData.description,
+      price: formData.price,
+      stock: formData.stock,
+      category: formData.category,
+      unit: formData.unit,
+    });
+
+    if (updated) {
+      setProducts(productsApi.getProducts());
+      showSuccess('Product updated successfully');
+    }
+    setEditingProduct(null);
+    setFormData({ name: '', description: '', price: 0, stock: 0, category: '', unit: 'kg' });
+    setEditDialogOpen(false);
+  };
+
+  const openEditDialog = (product: Product) => {
+    setEditingProduct(product);
+    setFormData({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      stock: product.stock,
+      category: product.category,
+      unit: product.unit,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData({ name: '', description: '', price: 0, stock: 0, category: '', unit: 'kg' });
+    setEditingProduct(null);
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -52,23 +134,131 @@ const AdminProducts = () => {
             <h1 className="text-2xl font-display font-bold text-foreground">Products</h1>
             <p className="text-muted-foreground text-sm">Manage your product inventory</p>
           </div>
-          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-            <DialogTrigger asChild>
-              <Button className="h-11 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-bold gap-2">
-                <Plus size={18} />
-                Add Product
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Add New Product</DialogTitle>
-              </DialogHeader>
-              <div className="text-center text-muted-foreground py-8">
-                Product form coming soon...
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button
+            onClick={() => {
+              setAddDialogOpen(true);
+              resetForm();
+            }}
+            className="h-11 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-bold gap-2"
+          >
+            <Plus size={18} />
+            Add Product
+          </Button>
         </div>
+
+        {/* Add/Edit Product Dialog */}
+        <Dialog open={addDialogOpen || editDialogOpen} onOpenChange={(open) => {
+          if (!open) {
+            setAddDialogOpen(false);
+            setEditDialogOpen(false);
+            resetForm();
+          }
+        }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-display font-bold">
+                {editDialogOpen ? 'Edit Product' : 'Add New Product'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                  Product Name *
+                </Label>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="e.g., Kadaknath Whole"
+                  className="h-11 rounded-xl border-border bg-muted/30"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                  Description
+                </Label>
+                <Input
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Product description"
+                  className="h-11 rounded-xl border-border bg-muted/30"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    Price (₹) *
+                  </Label>
+                  <Input
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })}
+                    placeholder="0"
+                    className="h-11 rounded-xl border-border bg-muted/30"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    Stock *
+                  </Label>
+                  <Input
+                    type="number"
+                    value={formData.stock}
+                    onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
+                    placeholder="0"
+                    className="h-11 rounded-xl border-border bg-muted/30"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    Category *
+                  </Label>
+                  <Input
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    placeholder="e.g., Whole Chicken"
+                    className="h-11 rounded-xl border-border bg-muted/30"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    Unit
+                  </Label>
+                  <Select value={formData.unit} onValueChange={(value) => setFormData({ ...formData, unit: value })}>
+                    <SelectTrigger className="h-11 rounded-xl border-border bg-muted/30">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="kg">kg</SelectItem>
+                      <SelectItem value="pack">pack</SelectItem>
+                      <SelectItem value="pcs">pcs</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button
+                  onClick={() => {
+                    setAddDialogOpen(false);
+                    setEditDialogOpen(false);
+                    resetForm();
+                  }}
+                  variant="outline"
+                  className="flex-1 h-11 rounded-xl"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={editDialogOpen ? handleEditProduct : handleAddProduct}
+                  className="flex-1 h-11 rounded-xl bg-brand-gold text-brand-black font-bold"
+                >
+                  {editDialogOpen ? 'Update Product' : 'Add Product'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Search */}
         <div className="relative">
@@ -81,9 +271,95 @@ const AdminProducts = () => {
           />
         </div>
 
-        {/* Products Table */}
+        {/* Products List - Table for Desktop, Cards for Mobile */}
         <div className="bg-card rounded-2xl border border-border overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile View */}
+          <div className="lg:hidden divide-y divide-border">
+            {filteredProducts.map((product) => (
+              <div key={product.id} className="p-5 space-y-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-brand-gold/10 rounded-xl flex items-center justify-center shrink-0">
+                      <Package size={20} className="text-brand-gold" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-foreground text-sm leading-tight">{product.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="bg-muted/50 text-[8px] font-black uppercase px-1.5 py-0">
+                          {product.category}
+                        </Badge>
+                        <span className="text-[10px] text-muted-foreground font-medium">{product.unit}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <Badge
+                    className={cn(
+                      "font-bold text-[9px] uppercase",
+                      product.active ? 'bg-emerald-500/20 text-emerald-500 border-none' : 'bg-slate-500/20 text-slate-500 border-none'
+                    )}
+                  >
+                    {product.active ? 'Active' : 'Inactive'}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 bg-muted/30 p-3 rounded-xl">
+                  <div>
+                    <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Price</p>
+                    <p className="font-bold text-foreground">₹{product.price}</p>
+                  </div>
+                  <div>
+                    <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Stock</p>
+                    <p className={cn(
+                      "font-bold",
+                      product.stock > 20 ? 'text-emerald-500' : product.stock > 0 ? 'text-amber-500' : 'text-brand-red'
+                    )}>
+                      {product.stock} units
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleToggleActive(product.id)}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-10 rounded-xl font-bold text-xs gap-2"
+                  >
+                    {product.active ? (
+                      <>
+                        <EyeOff size={14} className="text-muted-foreground" />
+                        Hide
+                      </>
+                    ) : (
+                      <>
+                        <Eye size={14} className="text-brand-gold" />
+                        Show
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => openEditDialog(product)}
+                    variant="outline"
+                    size="sm"
+                    className="h-10 w-10 rounded-xl font-bold shrink-0"
+                  >
+                    <Pencil size={14} className="text-muted-foreground" />
+                  </Button>
+                  <Button
+                    onClick={() => handleDelete(product.id)}
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 w-10 rounded-xl font-bold shrink-0 text-brand-red hover:bg-brand-red/10"
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop View */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-muted/30 border-b border-border">
                 <tr>
@@ -112,8 +388,8 @@ const AdminProducts = () => {
                   <tr key={product.id} className="hover:bg-muted/20 transition-colors">
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-brand-gold/10 rounded-xl flex items-center justify-center">
-                          <Package size={20} className="text-brand-gold" />
+                        <div className="w-10 h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold">
+                          <Package size={16} />
                         </div>
                         <div>
                           <p className="font-bold text-foreground text-sm">{product.name}</p>
@@ -122,21 +398,27 @@ const AdminProducts = () => {
                       </div>
                     </td>
                     <td className="py-4 px-6">
-                      <Badge variant="outline" className="bg-muted/50 text-foreground text-[10px] font-bold uppercase">
+                      <Badge variant="outline" className="bg-muted/50 text-[10px] font-black uppercase">
                         {product.category}
                       </Badge>
                     </td>
                     <td className="py-4 px-6">
-                      <span className="font-bold text-foreground">₹{product.price}</span>
+                      <span className="font-black text-foreground">₹{product.price}</span>
                     </td>
                     <td className="py-4 px-6">
-                      <span className={`font-bold ${product.stock > 20 ? 'text-emerald-500' : product.stock > 0 ? 'text-amber-500' : 'text-brand-red'}`}>
+                      <span className={cn(
+                        "font-bold",
+                        product.stock > 20 ? 'text-emerald-500' : product.stock > 0 ? 'text-amber-500' : 'text-brand-red'
+                      )}>
                         {product.stock} units
                       </span>
                     </td>
                     <td className="py-4 px-6">
                       <Badge
-                        className={product.active ? 'bg-emerald-500/20 text-emerald-500 border-none' : 'bg-slate-500/20 text-slate-500 border-none'}
+                        className={cn(
+                          "font-bold text-[10px] uppercase border-none",
+                          product.active ? 'bg-emerald-500/20 text-emerald-500' : 'bg-slate-500/20 text-slate-500'
+                        )}
                       >
                         {product.active ? 'Active' : 'Inactive'}
                       </Badge>
@@ -146,30 +428,38 @@ const AdminProducts = () => {
                         <Button
                           onClick={() => handleToggleActive(product.id)}
                           variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 rounded-lg"
+                          size="sm"
+                          className="h-8 px-3 rounded-lg text-brand-gold hover:bg-brand-gold/10 font-bold text-xs"
                         >
                           {product.active ? (
-                            <EyeOff size={16} className="text-muted-foreground" />
+                            <>
+                              <EyeOff size={14} className="mr-1" />
+                              Hide
+                            </>
                           ) : (
-                            <Eye size={16} className="text-brand-gold" />
+                            <>
+                              <Eye size={14} className="mr-1" />
+                              Show
+                            </>
                           )}
                         </Button>
                         <Button
-                          onClick={() => setEditingProduct(product)}
+                          onClick={() => openEditDialog(product)}
                           variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 rounded-lg"
+                          size="sm"
+                          className="h-8 px-3 rounded-lg text-muted-foreground hover:bg-muted/50 font-bold text-xs"
                         >
-                          <Pencil size={16} className="text-muted-foreground" />
+                          <Pencil size={14} className="mr-1" />
+                          Edit
                         </Button>
                         <Button
                           onClick={() => handleDelete(product.id)}
                           variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 rounded-lg text-brand-red hover:text-brand-red hover:bg-brand-red/10"
+                          size="sm"
+                          className="h-8 px-3 rounded-lg text-brand-red hover:bg-brand-red/10 font-bold text-xs"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} className="mr-1" />
+                          Delete
                         </Button>
                       </div>
                     </td>

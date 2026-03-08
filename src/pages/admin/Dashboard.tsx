@@ -32,21 +32,21 @@ const DashboardCard = ({
   trend?: string;
   color: string;
 }) => (
-  <Card className="border-border bg-card">
-    <CardHeader className="flex flex-row items-center justify-between pb-2">
-      <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+  <Card className="border-border bg-card shadow-sm">
+    <CardHeader className="flex flex-row items-center justify-between pb-2 px-4 pt-4 space-y-0">
+      <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
         {title}
       </CardTitle>
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
-        <Icon size={18} />
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
+        <Icon size={14} />
       </div>
     </CardHeader>
-    <CardContent>
-      <div className="text-2xl font-black text-foreground mb-1">{value}</div>
+    <CardContent className="px-4 pb-4">
+      <div className="text-xl font-black text-foreground mb-0.5">{value}</div>
       {trend && (
-        <div className="flex items-center gap-1 text-xs text-emerald-500 font-bold">
-          <TrendingUp size={12} />
-          {trend}
+        <div className="flex items-center gap-1 text-[9px] text-emerald-500 font-bold whitespace-nowrap">
+          <TrendingUp size={10} />
+          {trend.split(' from ')[0]}
         </div>
       )}
     </CardContent>
@@ -93,7 +93,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <DashboardCard
             title="Orders Today"
             value={todayOrders.length}

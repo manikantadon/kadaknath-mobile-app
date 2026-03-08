@@ -1,7 +1,8 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
+import AdminLayout from '../../components/admin/AdminLayout';
 import { ordersApi } from '@/lib/api/orders.api';
 import { driversApi } from '@/lib/api/drivers.api';
 import { Order, OrderStatus } from '@/lib/orders';
@@ -16,6 +17,8 @@ import {
   Clock,
   Package,
   X,
+  Calendar,
+  User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,15 +39,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 const statusColors: Record<OrderStatus, string> = {
-  CREATED: 'bg-slate-500/20 text-slate-400',
-  CONFIRMED: 'bg-blue-500/20 text-blue-400',
-  PACKING: 'bg-yellow-500/20 text-yellow-400',
-  READY_FOR_PICKUP: 'bg-orange-500/20 text-orange-400',
-  OUT_FOR_DELIVERY: 'bg-purple-500/20 text-purple-400',
-  DELIVERED: 'bg-emerald-500/20 text-emerald-400',
-  CANCELLED: 'bg-red-500/20 text-red-400',
+  CREATED: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+  CONFIRMED: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  PACKING: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  READY_FOR_PICKUP: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  OUT_FOR_DELIVERY: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  DELIVERED: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  CANCELLED: 'bg-red-500/20 text-red-400 border-red-500/30',
 };
 
 const AdminOrders = () => {
@@ -200,6 +204,19 @@ const AdminOrders = () => {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString('en-IN', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch (e) {
+      return 'N/A';
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -240,9 +257,81 @@ const AdminOrders = () => {
           </Select>
         </div>
 
-        {/* Orders Table */}
-        <div className="bg-card rounded-2xl border border-border overflow-hidden">
-          <div className="overflow-x-auto">
+        {/* Orders List - Cards for Mobile, Table for Desktop */}
+        <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+          {/* Mobile View */}
+          <div className="lg:hidden divide-y divide-border">
+            {filteredOrders.map((order) => {
+              const StatusIcon = getStatusIcon(order.status);
+              return (
+                <div key={order.id} className="p-5 space-y-4" onClick={() => handleViewDetails(order)}>
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-brand-gold uppercase tracking-widest">{order.id}</p>
+                      <h3 className="font-bold text-foreground leading-tight">{order.customerName}</h3>
+                    </div>
+                    <Badge className={cn("font-bold text-[9px] uppercase border", statusColors[order.status])}>
+                      <StatusIcon size={10} className="mr-1" />
+                      {order.status.replace(/_/g, ' ')}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 bg-muted/30 p-3 rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <Package size={14} className="text-brand-gold" />
+                      <span className="text-xs font-bold text-foreground">{order.items.length} items</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-black text-foreground">₹{order.total}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 px-1 text-xs">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Calendar size={12} className="text-brand-gold shrink-0" />
+                      <span>{formatDate(order.createdAt)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <User size={12} className="text-brand-gold shrink-0" />
+                      <span>{order.driverName || 'No driver assigned'}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewDetails(order);
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 h-10 rounded-xl font-bold text-xs gap-2 border-border"
+                    >
+                      <Eye size={14} className="text-brand-gold" />
+                      Details
+                    </Button>
+                    {order.status === 'READY_FOR_PICKUP' && (
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenAssignDialog(order);
+                        }}
+                        variant="default"
+                        size="sm"
+                        className="flex-1 h-10 rounded-xl font-bold text-xs gap-2 bg-brand-black dark:bg-brand-gold text-brand-gold dark:text-brand-black"
+                      >
+                        <Truck size={14} />
+                        Assign
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop View */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-muted/30 border-b border-border">
                 <tr>
@@ -359,6 +448,7 @@ const AdminOrders = () => {
         open={isDrawerOpen}
         onClose={handleCloseDrawer}
         onCancelOrder={selectedOrder?.status === 'CREATED' ? () => handleRequestCancel(selectedOrder) : undefined}
+        actions={selectedOrder ? getAvailableActions(selectedOrder) : []}
         showTimeline
       />
 
@@ -374,7 +464,7 @@ const AdminOrders = () => {
       />
 
       {/* Assign Driver Dialog */}
-      <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
+      <Dialog open={assignDialogOpen} onValueChange={setAssignDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Assign Driver</DialogTitle>

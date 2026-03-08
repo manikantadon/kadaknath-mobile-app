@@ -2,11 +2,26 @@
 
 import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { UserCog, Search, Plus, Pencil, UserX, Shield, Mail, Phone } from 'lucide-react';
+import { UserCog, Search, Plus, Pencil, UserX, Shield, Mail, Phone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { showSuccess } from '@/utils/toast';
+import { Label } from '@/components/ui/label';
+import { showSuccess, showError } from '@/utils/toast';
+import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface StaffMember {
   id: string;
@@ -74,6 +89,20 @@ const roleIcons: Record<string, React.ComponentType<{ size?: number }>> = {
 const AdminStaff = () => {
   const [staff, setStaff] = useState<StaffMember[]>(initialStaff);
   const [searchQuery, setSearchQuery] = useState('');
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
+  const [formData, setFormData] = useState<{
+    name: string;
+    email: string;
+    phone: string;
+    role: 'ADMIN' | 'MANAGER' | 'PACKER' | 'SUPPORT';
+  }>({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'SUPPORT',
+  });
 
   const filteredStaff = staff.filter(
     (s) =>
@@ -88,6 +117,61 @@ const AdminStaff = () => {
     showSuccess(`Staff member ${member?.active ? 'deactivated' : 'activated'}`);
   };
 
+  const handleAddStaff = () => {
+    if (!formData.name || !formData.email || !formData.phone) {
+      showError('Please fill in all required fields');
+      return;
+    }
+
+    const staffMember: StaffMember = {
+      id: `staff-${Date.now()}`,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      role: formData.role,
+      active: true,
+      joinedDate: new Date().toISOString(),
+    };
+
+    setStaff([...staff, staffMember]);
+    setFormData({ name: '', email: '', phone: '', role: 'SUPPORT' });
+    setAddDialogOpen(false);
+    showSuccess('Staff member added successfully');
+  };
+
+  const handleEditStaff = () => {
+    if (!editingStaff || !formData.name || !formData.email || !formData.phone) {
+      showError('Please fill in all required fields');
+      return;
+    }
+
+    setStaff(staff.map((s) =>
+      s.id === editingStaff.id
+        ? { ...s, name: formData.name, email: formData.email, phone: formData.phone, role: formData.role }
+        : s
+    ));
+    setEditingStaff(null);
+    setFormData({ name: '', email: '', phone: '', role: 'SUPPORT' });
+    setEditDialogOpen(false);
+    showSuccess('Staff member updated successfully');
+  };
+
+  const openEditDialog = (member: StaffMember) => {
+    setEditingStaff(member);
+    setFormData({
+      name: member.name,
+      email: member.email,
+      phone: member.phone,
+      role: member.role,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData({ name: '', email: '', phone: '', role: 'SUPPORT' });
+    setEditingStaff(null);
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -97,11 +181,102 @@ const AdminStaff = () => {
             <h1 className="text-2xl font-display font-bold text-foreground">Staff</h1>
             <p className="text-muted-foreground text-sm">Manage team members and permissions</p>
           </div>
-          <Button className="h-11 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-bold gap-2">
+          <Button
+            onClick={() => setAddDialogOpen(true)}
+            className="h-11 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-bold gap-2"
+          >
             <Plus size={18} />
             Add Staff
           </Button>
         </div>
+
+        {/* Add/Edit Staff Dialog */}
+        <Dialog open={addDialogOpen || editDialogOpen} onOpenChange={(open) => {
+          if (!open) {
+            setAddDialogOpen(false);
+            setEditDialogOpen(false);
+            resetForm();
+          }
+        }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-display font-bold">
+                {editDialogOpen ? 'Edit Staff Member' : 'Add Staff Member'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                  Full Name *
+                </Label>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Enter full name"
+                  className="h-11 rounded-xl border-border bg-muted/30"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                  Email Address *
+                </Label>
+                <Input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="staff@kadaknathpro.com"
+                  className="h-11 rounded-xl border-border bg-muted/30"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                  Phone Number *
+                </Label>
+                <Input
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+91 98765 43210"
+                  className="h-11 rounded-xl border-border bg-muted/30"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                  Role *
+                </Label>
+                <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value as any })}>
+                  <SelectTrigger className="h-11 rounded-xl border-border bg-muted/30">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
+                    <SelectItem value="MANAGER">Manager</SelectItem>
+                    <SelectItem value="PACKER">Packer</SelectItem>
+                    <SelectItem value="SUPPORT">Support</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button
+                  onClick={() => {
+                    setAddDialogOpen(false);
+                    setEditDialogOpen(false);
+                    resetForm();
+                  }}
+                  variant="outline"
+                  className="flex-1 h-11 rounded-xl"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={editDialogOpen ? handleEditStaff : handleAddStaff}
+                  className="flex-1 h-11 rounded-xl bg-brand-gold text-brand-black font-bold"
+                >
+                  {editDialogOpen ? 'Update Staff' : 'Add Staff Member'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Search */}
         <div className="relative">
@@ -154,20 +329,90 @@ const AdminStaff = () => {
           </div>
         </div>
 
-        {/* Staff Table */}
+        {/* Staff List - Table for Desktop, Cards for Mobile */}
         <div className="bg-card rounded-2xl border border-border overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile View */}
+          <div className="lg:hidden divide-y divide-border">
+            {filteredStaff.map((member) => {
+              const RoleIcon = roleIcons[member.role] || UserCog;
+              return (
+                <div key={member.id} className="p-5 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-brand-gold rounded-2xl flex items-center justify-center text-brand-black font-bold text-lg">
+                        {member.name.split(' ').map((n) => n[0]).join('')}
+                      </div>
+                      <div>
+                        <p className="font-bold text-foreground">{member.name}</p>
+                        <Badge className={`${roleColors[member.role]} border-none font-bold text-[9px] uppercase mt-1`}>
+                          <RoleIcon size={10} className="mr-1" />
+                          {member.role}
+                        </Badge>
+                      </div>
+                    </div>
+                    <Badge
+                      className={
+                        member.active
+                          ? 'bg-emerald-500/20 text-emerald-500 border-none'
+                          : 'bg-slate-500/20 text-slate-500 border-none'
+                      }
+                    >
+                      {member.active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2 bg-muted/30 p-3 rounded-xl">
+                    <div className="flex items-center gap-2 text-xs text-foreground">
+                      <Mail size={12} className="text-brand-gold shrink-0" />
+                      <span className="truncate">{member.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Phone size={12} className="text-brand-gold shrink-0" />
+                      <span>{member.phone}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => openEditDialog(member)}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 h-10 rounded-xl font-bold text-xs"
+                    >
+                      <Pencil size={14} className="mr-2" />
+                      Edit
+                    </Button>
+                    <Button
+                      onClick={() => handleToggleActive(member.id)}
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "flex-1 h-10 rounded-xl font-bold text-xs",
+                        member.active ? "text-brand-red hover:bg-brand-red/10" : "text-emerald-500 hover:bg-emerald-500/10"
+                      )}
+                    >
+                      <UserX size={14} className="mr-2" />
+                      {member.active ? 'Deactivate' : 'Activate'}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop View */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-muted/30 border-b border-border">
                 <tr>
                   <th className="text-left py-4 px-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                    Member
-                  </th>
-                  <th className="text-left py-4 px-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                    Contact
+                    Staff Member
                   </th>
                   <th className="text-left py-4 px-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                     Role
+                  </th>
+                  <th className="text-left py-4 px-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    Contact
                   </th>
                   <th className="text-left py-4 px-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                     Joined
@@ -192,19 +437,7 @@ const AdminStaff = () => {
                           </div>
                           <div>
                             <p className="font-bold text-foreground text-sm">{member.name}</p>
-                            <p className="text-xs text-muted-foreground">ID: {member.id}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-xs text-foreground">
-                            <Mail size={12} className="text-brand-gold" />
-                            <span>{member.email}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Phone size={12} className="text-brand-gold" />
-                            <span>{member.phone}</span>
+                            <p className="text-xs text-muted-foreground">{member.email}</p>
                           </div>
                         </div>
                       </td>
@@ -215,7 +448,15 @@ const AdminStaff = () => {
                         </Badge>
                       </td>
                       <td className="py-4 px-6">
-                        <span className="text-sm font-medium text-foreground">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-xs text-foreground">
+                            <Phone size={12} className="text-brand-gold" />
+                            <span>{member.phone}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="text-sm text-muted-foreground">
                           {new Date(member.joinedDate).toLocaleDateString('en-IN', {
                             month: 'short',
                             day: 'numeric',
@@ -237,17 +478,22 @@ const AdminStaff = () => {
                       <td className="py-4 px-6">
                         <div className="flex items-center justify-end gap-2">
                           <Button
+                            onClick={() => openEditDialog(member)}
                             variant="ghost"
                             size="sm"
-                            className="h-8 px-3 rounded-lg"
+                            className="h-8 px-3 rounded-lg text-muted-foreground hover:bg-muted/50 font-bold text-xs"
                           >
-                            <Pencil size={14} className="text-muted-foreground" />
+                            <Pencil size={14} className="mr-1" />
+                            Edit
                           </Button>
                           <Button
                             onClick={() => handleToggleActive(member.id)}
                             variant="ghost"
                             size="sm"
-                            className="h-8 px-3 rounded-lg text-brand-red hover:text-brand-red hover:bg-brand-red/10"
+                            className={cn(
+                              "h-8 px-3 rounded-lg font-bold text-xs",
+                              member.active ? "text-brand-red hover:bg-brand-red/10" : "text-emerald-500 hover:bg-emerald-500/10"
+                            )}
                           >
                             <UserX size={14} className="mr-1" />
                             {member.active ? 'Deactivate' : 'Activate'}
