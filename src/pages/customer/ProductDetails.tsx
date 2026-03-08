@@ -203,7 +203,7 @@ const ProductDetails = () => {
               </Button>
               <Button
                 onClick={() => {
-                  showSuccess('Proceeding to quick checkout...');
+                  showSuccess('Proceeding to checkout...');
                   navigate('/customer/cart');
                 }}
                 className="flex-1 h-14 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-bold gap-2 border-none shadow-xl shadow-brand-gold/20"

@@ -66,11 +66,29 @@
 @layer base {
   * {
     @apply border-border;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input,
+  textarea,
+  [contenteditable="true"],
+  [contenteditable=""] {
+    -webkit-touch-callout: default;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
   }
 
   body {
     @apply bg-background text-foreground font-sans transition-colors duration-300;
     overscroll-behavior-y: none;
+    -webkit-touch-callout: none;
   }
 
   html {

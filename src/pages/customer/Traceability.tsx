@@ -19,14 +19,14 @@ import {
   Camera,
   X,
   RefreshCcw,
-  Zap
+  Zap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from '@/components/ui/badge';
-import { showSuccess, showError } from '@/utils/toast';
-import { cn } from '@/lib/utils';
+import { Badge } from "@/components/ui/badge";
+import { showSuccess, showError } from "@/utils/toast";
+import { cn } from "@/lib/utils";
 
 const BATCH_DATA = {
   id: "KP-JH-9021",
@@ -86,7 +86,7 @@ const BATCH_DATA = {
 };
 
 const Traceability = () => {
-  const [activeTab, setActiveTab] = useState<'scan' | 'result'>('scan');
+  const [activeTab, setActiveTab] = useState<"scan" | "result">("scan");
   const [batchId, setBatchId] = useState("");
   const [isCameraActive, setIsCameraActive] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -106,23 +106,32 @@ const Traceability = () => {
       // 2. Try the primary back camera first
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
-        audio: false
+        audio: false,
       });
-      
+
       handleStreamSuccess(stream);
     } catch (err: any) {
       console.error("Primary Camera Error:", err);
-      
+
       // 3. Fallback to ANY available camera if back camera fails
       try {
-        const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const fallbackStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
         handleStreamSuccess(fallbackStream);
       } catch (fallbackErr: any) {
         setIsCameraActive(false);
-        if (fallbackErr.name === 'NotAllowedError' || fallbackErr.name === 'PermissionDeniedError') {
-          showError("Permission Denied: Please reset camera permissions in browser settings.");
-        } else if (fallbackErr.name === 'NotFoundError') {
-          showError("No Camera Found: Could not detect any camera on this device.");
+        if (
+          fallbackErr.name === "NotAllowedError" ||
+          fallbackErr.name === "PermissionDeniedError"
+        ) {
+          showError(
+            "Permission Denied: Please reset camera permissions in browser settings.",
+          );
+        } else if (fallbackErr.name === "NotFoundError") {
+          showError(
+            "No Camera Found: Could not detect any camera on this device.",
+          );
         } else {
           showError(`Camera Error: ${fallbackErr.message || "Access failed"}`);
         }
@@ -134,10 +143,10 @@ const Traceability = () => {
     if (videoRef.current) {
       videoRef.current.srcObject = stream;
       streamRef.current = stream;
-      
+
       // Critical for Android/iOS: Ensure play is called
       videoRef.current.onloadedmetadata = () => {
-        videoRef.current?.play().catch(e => {
+        videoRef.current?.play().catch((e) => {
           console.error("Play error:", e);
           showError("Tap the camera frame to start the feed.");
         });
@@ -147,7 +156,7 @@ const Traceability = () => {
 
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
     setIsCameraActive(false);
@@ -160,19 +169,19 @@ const Traceability = () => {
   const handleSimulatedScan = () => {
     stopCamera();
     setTimeout(() => {
-      setActiveTab('result');
+      setActiveTab("result");
       showSuccess("Batch verified successfully! 🏷️");
     }, 500);
   };
 
-  if (activeTab === 'result') {
+  if (activeTab === "result") {
     return (
       <MobileLayout role="customer">
         <div className="bg-brand-black pt-12 pb-8 px-6 rounded-b-[3rem] shadow-xl relative z-20">
           <div className="flex items-center gap-4 mb-6">
             <button
               onClick={() => {
-                setActiveTab('scan');
+                setActiveTab("scan");
               }}
               className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white backdrop-blur-md border border-white/10 active:scale-95 transition-transform"
             >
@@ -299,9 +308,11 @@ const Traceability = () => {
                   size={100}
                   className="text-brand-gold opacity-40 mb-4 group-hover:scale-110 transition-transform duration-500"
                 />
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Position QR here</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  Position QR here
+                </p>
               </div>
-              
+
               <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-brand-gold rounded-tl-2xl" />
               <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-brand-gold rounded-tr-2xl" />
               <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-brand-gold rounded-bl-2xl" />
@@ -309,9 +320,9 @@ const Traceability = () => {
             </div>
           ) : (
             <div className="relative w-full aspect-square max-w-[240px] mx-auto mb-8 overflow-hidden rounded-[3rem] bg-black shadow-2xl">
-              <video 
-                ref={videoRef} 
-                autoPlay 
+              <video
+                ref={videoRef}
+                autoPlay
                 playsInline
                 muted
                 controls={false}
@@ -320,8 +331,8 @@ const Traceability = () => {
               />
               <div className="absolute inset-0 border-4 border-brand-gold/30 rounded-[3rem] pointer-events-none" />
               <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-brand-gold/50 shadow-[0_0_15px_rgba(212,175,55,0.8)] animate-[scan_2s_ease-in-out_infinite]" />
-              
-              <button 
+
+              <button
                 onClick={handleSimulatedScan}
                 className="absolute inset-0 flex items-center justify-center bg-black/20 text-white font-black uppercase text-[10px] tracking-widest opacity-0 hover:opacity-100 transition-opacity"
               >
@@ -341,7 +352,7 @@ const Traceability = () => {
 
           <div className="space-y-4">
             {!isCameraActive ? (
-              <Button 
+              <Button
                 onClick={startCamera}
                 className="w-full h-14 rounded-2xl bg-brand-gold text-brand-black hover:bg-brand-gold/90 font-bold text-base shadow-xl shadow-brand-gold/20 active:scale-95 transition-transform"
               >
@@ -350,7 +361,7 @@ const Traceability = () => {
               </Button>
             ) : (
               <div className="flex gap-3">
-                <Button 
+                <Button
                   onClick={handleSimulatedScan}
                   className="flex-1 h-14 rounded-2xl bg-brand-gold text-brand-black font-bold border-none"
                 >
@@ -368,10 +379,12 @@ const Traceability = () => {
                 </Button>
               </div>
             )}
-            
+
             <div className="flex items-center gap-4 py-2">
               <div className="h-[1px] flex-1 bg-border" />
-              <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Or enter code</span>
+              <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                Or enter code
+              </span>
               <div className="h-[1px] flex-1 bg-border" />
             </div>
 
@@ -385,7 +398,7 @@ const Traceability = () => {
               <Button
                 onClick={() => {
                   if (batchId) {
-                    setActiveTab('result');
+                    setActiveTab("result");
                     showSuccess("Batch verified!");
                   }
                 }}
@@ -399,30 +412,40 @@ const Traceability = () => {
         </div>
 
         <div className="mt-8 mb-12">
-          <h3 className="text-lg font-display font-bold text-foreground mb-4">Certified Safe</h3>
+          <h3 className="text-lg font-display font-bold text-foreground mb-4">
+            Certified Safe
+          </h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-card p-4 rounded-[2rem] border border-border flex flex-col items-center text-center">
               <div className="w-10 h-10 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500 mb-3">
                 <CheckCircle2 size={24} />
               </div>
-              <p className="text-[10px] font-black uppercase text-foreground">Antibiotic Free</p>
+              <p className="text-[10px] font-black uppercase text-foreground">
+                Antibiotic Free
+              </p>
             </div>
             <div className="bg-card p-4 rounded-[2rem] border border-border flex flex-col items-center text-center">
               <div className="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-500 mb-3">
                 <CheckCircle2 size={24} />
               </div>
-              <p className="text-[10px] font-black uppercase text-foreground">100% Organic</p>
+              <p className="text-[10px] font-black uppercase text-foreground">
+                100% Organic
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         @keyframes scan {
           0%, 100% { top: 10%; opacity: 0.2; }
           50% { top: 90%; opacity: 0.8; }
         }
-      `}} />
+      `,
+        }}
+      />
     </MobileLayout>
   );
 };

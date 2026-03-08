@@ -2,125 +2,123 @@
 
 import React, { useState } from 'react';
 import MobileLayout from '@/components/MobileLayout';
-import { Package, Truck, CheckCircle2, Clock, ChevronRight, RotateCcw } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-const ACTIVE_ORDER = {
-  id: 'ORD-9921',
-  status: 'processing',
-  items: 'Premium Kadaknath Whole (1.2kg)',
-  total: 1440,
-  steps: [
-    { label: 'Ordered', icon: Clock, completed: true },
-    { label: 'Processing', icon: Package, completed: true, current: true },
-    { label: 'On the Way', icon: Truck, completed: false },
-    { label: 'Delivered', icon: CheckCircle2, completed: false },
-  ]
-};
-
-const PAST_ORDERS = [
-  { id: 'ORD-8812', date: 'Oct 12, 2023', items: 'Curry Cut, 12 Eggs', total: 1800, status: 'delivered' },
-  { id: 'ORD-8705', date: 'Sep 28, 2023', items: 'Breast Fillets (2kg)', total: 3000, status: 'delivered' },
-];
+import { Button } from '@/components/ui/button';
+import { useOrders } from '@/hooks/useOrders';
+import { OrderCard } from '@/components/orders/OrderCard';
+import { OrderDetailsDrawer } from '@/components/orders/OrderDetailsDrawer';
+import { Order, OrderStatus } from '@/lib/orders';
+import { Package, RotateCcw, AlertCircle } from 'lucide-react';
+import { showSuccess, showError } from '@/utils/toast';
+import { useNavigate } from 'react-router-dom';
 
 const CustomerOrders = () => {
-  const [activeTab, setActiveTab] = useState('active');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  const { orders, cancelOrderAction, refreshOrders } = useOrders({ type: 'customer', customerId: 'customer' });
+
+  const activeOrders = orders.filter((o) => !['DELIVERED', 'CANCELLED'].includes(o.status));
+  const completedOrders = orders.filter((o) => ['DELIVERED', 'CANCELLED'].includes(o.status));
+
+  const handleCancelOrder = async (orderId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const order = orders.find((o) => o.id === orderId);
+    if (order?.status !== 'CREATED') {
+      showError('Only orders in CREATED status can be cancelled');
+      return;
+    }
+
+    const updated = await cancelOrderAction(orderId);
+    if (updated) {
+      showSuccess('Order cancelled successfully');
+      refreshOrders();
+    }
+  };
+
+  const displayedOrders = activeTab === 'active' ? activeOrders : completedOrders;
 
   return (
     <MobileLayout role="customer">
-      <div className="px-6 pt-8">
-        <h1 className="text-2xl font-display font-bold text-brand-black mb-2">My Orders</h1>
-        <p className="text-slate-500 text-sm mb-8">Track your premium poultry deliveries.</p>
+      <div className="px-6 pt-8 pb-24">
+        <h1 className="text-2xl font-display font-bold text-foreground mb-2">My Orders</h1>
+        <p className="text-muted-foreground text-sm mb-6">Track your premium poultry deliveries.</p>
 
-        <Tabs defaultValue="active" className="mb-8" onValueChange={setActiveTab}>
-          <TabsList className="w-full bg-slate-100 p-1 rounded-2xl h-12">
-            <TabsTrigger value="active" className="flex-1 rounded-xl font-bold text-xs data-[state=active]:bg-brand-black data-[state=active]:text-brand-gold">Active</TabsTrigger>
-            <TabsTrigger value="past" className="flex-1 rounded-xl font-bold text-xs data-[state=active]:bg-brand-black data-[state=active]:text-brand-gold">History</TabsTrigger>
+        <Tabs defaultValue="active" className="mb-6" onValueChange={(v) => setActiveTab(v as 'active' | 'completed')}>
+          <TabsList className="w-full bg-muted p-1 rounded-2xl h-12">
+            <TabsTrigger value="active" className="flex-1 rounded-xl font-bold text-xs data-[state=active]:bg-brand-black data-[state=active]:text-brand-gold">
+              Active ({activeOrders.length})
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="flex-1 rounded-xl font-bold text-xs data-[state=active]:bg-brand-black data-[state=active]:text-brand-gold">
+              History ({completedOrders.length})
+            </TabsTrigger>
           </TabsList>
         </Tabs>
 
-        {activeTab === 'active' ? (
-          <div className="space-y-6">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100"
-            >
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <span className="text-[10px] font-black text-brand-gold uppercase tracking-widest">Order ID</span>
-                  <h3 className="text-lg font-bold text-brand-black">{ACTIVE_ORDER.id}</h3>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total</span>
-                  <div className="text-lg font-black text-brand-black">₹{ACTIVE_ORDER.total}</div>
-                </div>
-              </div>
-
-              <div className="bg-brand-offwhite rounded-2xl p-4 mb-8">
-                <p className="text-xs font-medium text-brand-charcoal">{ACTIVE_ORDER.items}</p>
-              </div>
-
-              <div className="relative">
-                <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-100"></div>
-                <div className="space-y-8">
-                  {ACTIVE_ORDER.steps.map((step, idx) => (
-                    <div key={step.label} className="flex items-center gap-4 relative">
-                      <div className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center z-10 transition-colors duration-500",
-                        step.completed ? "bg-brand-black text-brand-gold" : "bg-slate-100 text-slate-300",
-                        step.current && "ring-4 ring-brand-gold/20"
-                      )}>
-                        <step.icon size={16} />
-                      </div>
-                      <div>
-                        <p className={cn(
-                          "text-sm font-bold",
-                          step.completed ? "text-brand-black" : "text-slate-300"
-                        )}>{step.label}</p>
-                        {step.current && <p className="text-[10px] text-brand-gold font-black uppercase tracking-wider">In Progress</p>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
+        {displayedOrders.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <Package size={24} className="text-muted-foreground" />
+            </div>
+            <p className="text-muted-foreground font-medium">
+              {activeTab === 'active' ? 'No active orders' : 'No order history'}
+            </p>
+            {activeTab === 'active' && (
+              <Button
+                onClick={() => navigate('/customer')}
+                variant="outline"
+                className="mt-4 h-12 rounded-2xl border-brand-gold text-brand-gold"
+              >
+                Browse Products
+              </Button>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
-            {PAST_ORDERS.map((order) => (
-              <motion.div 
-                key={order.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-brand-offwhite rounded-2xl flex items-center justify-center text-brand-black">
-                    <CheckCircle2 size={24} className="text-emerald-500" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-brand-black">{order.id}</h4>
-                      <span className="text-[10px] text-slate-400 font-medium">{order.date}</span>
-                    </div>
-                    <p className="text-xs text-slate-500">{order.items}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-black text-brand-black mb-2">₹{order.total}</div>
-                  <button className="flex items-center gap-1 text-brand-gold text-[10px] font-black uppercase tracking-widest">
-                    <RotateCcw size={12} />
-                    Reorder
-                  </button>
-                </div>
-              </motion.div>
+            {displayedOrders.map((order) => (
+              <div key={order.id} className="relative">
+                <OrderCard order={order} onClick={() => setSelectedOrder(order)} />
+                {order.status === 'CREATED' && activeTab === 'active' && (
+                  <Button
+                    onClick={(e) => handleCancelOrder(order.id, e)}
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-4 right-4 h-8 w-8 p-0 rounded-full"
+                  >
+                    <RotateCcw size={14} />
+                  </Button>
+                )}
+              </div>
             ))}
           </div>
         )}
       </div>
+
+      <OrderDetailsDrawer
+        order={selectedOrder}
+        open={!!selectedOrder}
+        onOpenChange={(open) => !open && setSelectedOrder(null)}
+        actions={
+          selectedOrder?.status === 'CREATED'
+            ? [
+                {
+                  label: 'Cancel Order',
+                  onClick: async () => {
+                    const updated = await cancelOrderAction(selectedOrder.id);
+                    if (updated) {
+                      showSuccess('Order cancelled successfully');
+                      refreshOrders();
+                      setSelectedOrder(null);
+                    }
+                  },
+                  variant: 'destructive',
+                },
+              ]
+            : []
+        }
+        showTimeline
+      />
     </MobileLayout>
   );
 };
