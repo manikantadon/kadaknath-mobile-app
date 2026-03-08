@@ -1,16 +1,18 @@
 import React from 'react';
 import { Order } from '@/lib/orders';
 import { OrderStatusBadge } from './OrderStatusBadge';
-import { ShoppingBag, Calendar, MapPin } from 'lucide-react';
+import { ShoppingBag, Calendar, MapPin, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface OrderCardProps {
   order: Order;
   onClick?: (e: React.MouseEvent) => void;
+  onCancel?: (e: React.MouseEvent) => void;
   className?: string;
 }
 
-export const OrderCard = ({ order, onClick, className }: OrderCardProps) => {
+export const OrderCard = ({ order, onClick, onCancel, className }: OrderCardProps) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-IN', {
@@ -24,12 +26,13 @@ export const OrderCard = ({ order, onClick, className }: OrderCardProps) => {
     <div
       onClick={onClick}
       className={cn(
-        'bg-card rounded-2xl p-5 border border-border shadow-sm hover:shadow-md transition-all cursor-pointer',
+        'bg-card rounded-2xl p-5 border border-border shadow-sm hover:shadow-md transition-all',
+        onClick && 'cursor-pointer',
         className
       )}
     >
       <div className="flex justify-between items-start mb-4">
-        <div>
+        <div className="flex-1">
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">
             Order ID
           </p>
@@ -58,11 +61,24 @@ export const OrderCard = ({ order, onClick, className }: OrderCardProps) => {
       </div>
 
       <div className="mt-4 pt-4 border-t border-border">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-            {order.items.reduce((sum, item) => sum + item.quantity, 0)} items
-          </span>
-          <span className="text-sm font-black text-foreground">₹{order.total}</span>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+              Total
+            </span>
+            <span className="text-lg font-black text-foreground ml-2">₹{order.total}</span>
+          </div>
+          {onCancel && (
+            <Button
+              onClick={onCancel}
+              variant="outline"
+              size="sm"
+              className="h-9 px-3 rounded-xl border-brand-red/50 text-brand-red hover:bg-brand-red/10 font-bold text-xs"
+            >
+              <X size={14} className="mr-1" />
+              Cancel
+            </Button>
+          )}
         </div>
       </div>
     </div>

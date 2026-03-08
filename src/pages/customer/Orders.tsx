@@ -7,34 +7,44 @@ import { Button } from '@/components/ui/button';
 import { useOrders } from '@/hooks/useOrders';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { OrderDetailsDrawer } from '@/components/orders/OrderDetailsDrawer';
-import { Order, OrderStatus } from '@/lib/orders';
-import { Package, RotateCcw, AlertCircle } from 'lucide-react';
+import { Order } from '@/lib/orders';
+import { Package } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const CustomerOrders = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
 
   const { orders, cancelOrderAction, refreshOrders } = useOrders({ type: 'customer', customerId: 'customer' });
 
   const activeOrders = orders.filter((o) => !['DELIVERED', 'CANCELLED'].includes(o.status));
   const completedOrders = orders.filter((o) => ['DELIVERED', 'CANCELLED'].includes(o.status));
 
-  const handleCancelOrder = async (orderId: string, e: React.MouseEvent) => {
+  const requestCancelOrder = (order: Order, e: React.MouseEvent) => {
     e.stopPropagation();
-    const order = orders.find((o) => o.id === orderId);
-    if (order?.status !== 'CREATED') {
+    if (order.status !== 'CREATED') {
       showError('Only orders in CREATED status can be cancelled');
       return;
     }
+    setOrderToCancel(order);
+    setShowCancelDialog(true);
+  };
 
-    const updated = await cancelOrderAction(orderId);
+  const handleCancelOrder = async () => {
+    if (!orderToCancel) return;
+
+    const updated = await cancelOrderAction(orderToCancel.id);
     if (updated) {
       showSuccess('Order cancelled successfully');
       refreshOrders();
     }
+    setShowCancelDialog(false);
+    setOrderToCancel(null);
   };
 
   const displayedOrders = activeTab === 'active' ? activeOrders : completedOrders;
@@ -78,17 +88,11 @@ const CustomerOrders = () => {
           <div className="space-y-4">
             {displayedOrders.map((order) => (
               <div key={order.id} className="relative">
-                <OrderCard order={order} onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }} />
-                {order.status === 'CREATED' && activeTab === 'active' && (
-                  <Button
-                    onClick={(e) => { e.stopPropagation(); handleCancelOrder(order.id, e); }}
-                    variant="destructive"
-                    size="sm"
-                    className="absolute top-4 right-4 h-8 w-8 p-0 rounded-full"
-                  >
-                    <RotateCcw size={14} />
-                  </Button>
-                )}
+                <OrderCard 
+                  order={order} 
+                  onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }}
+                  onCancel={order.status === 'CREATED' && activeTab === 'active' ? (e) => requestCancelOrder(order, e) : undefined}
+                />
               </div>
             ))}
           </div>
@@ -104,13 +108,10 @@ const CustomerOrders = () => {
             ? [
                 {
                   label: 'Cancel Order',
-                  onClick: async () => {
-                    const updated = await cancelOrderAction(selectedOrder.id);
-                    if (updated) {
-                      showSuccess('Order cancelled successfully');
-                      refreshOrders();
-                      setSelectedOrder(null);
-                    }
+                  onClick: () => {
+                    setOrderToCancel(selectedOrder);
+                    setShowCancelDialog(true);
+                    setSelectedOrder(null);
                   },
                   variant: 'destructive',
                 },
@@ -119,6 +120,54 @@ const CustomerOrders = () => {
         }
         showTimeline
       />
+
+      {/* Custom Confirmation Dialog */}
+      <AnimatePresence>
+        {showCancelDialog && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCancelDialog(false)}
+              className="fixed inset-0 bg-black/80 z-[100]"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed inset-0 z-[101] flex items-center justify-center p-6 pointer-events-none"
+            >
+              <div className="bg-card rounded-[2rem] p-6 max-w-[320px] w-full border border-border shadow-xl pointer-events-auto">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-display font-bold text-foreground mb-2">
+                    Cancel Order?
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    This action cannot be undone. Are you sure you want to cancel order{' '}
+                    <span className="font-bold text-foreground">{orderToCancel?.id}</span>?
+                  </p>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <Button
+                    onClick={() => setShowCancelDialog(false)}
+                    variant="outline"
+                    className="h-12 rounded-2xl font-bold"
+                  >
+                    Keep Order
+                  </Button>
+                  <Button
+                    onClick={handleCancelOrder}
+                    className="h-12 rounded-2xl bg-brand-red text-white hover:bg-brand-red/90 font-bold"
+                  >
+                    Yes, Cancel
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </MobileLayout>
   );
 };

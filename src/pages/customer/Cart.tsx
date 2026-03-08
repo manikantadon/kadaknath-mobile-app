@@ -185,8 +185,8 @@ const CustomerCart = () => {
   }
 
   return (
-    <MobileLayout role="customer">
-      <div className="px-6 pt-8 pb-24">
+    <MobileLayout role="customer" hideNav>
+      <div className="px-6 pt-8 pb-32">
         <h1 className="text-2xl font-display font-bold text-foreground mb-2">My Cart</h1>
         <p className="text-muted-foreground text-sm mb-6">{cartItems.length} item(s)</p>
 
