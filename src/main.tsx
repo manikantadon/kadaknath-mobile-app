@@ -28,6 +28,35 @@ document.addEventListener('selectstart', (e) => {
   }
 });
 
+// Custom pull-to-refresh without default browser indicator
+let touchStartY = 0;
+let touchCurrentY = 0;
+const refreshThreshold = 150; // pixels to trigger refresh
+let refreshTriggered = false;
+
+document.addEventListener('touchstart', (e) => {
+  touchStartY = e.touches[0].clientY;
+  refreshTriggered = false;
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+  touchCurrentY = e.touches[0].clientY;
+  const deltaY = touchCurrentY - touchStartY;
+
+  // Only trigger if scrolling from top and pulling down
+  if (window.scrollY === 0 && deltaY > 0) {
+    if (deltaY > refreshThreshold && !refreshTriggered) {
+      refreshTriggered = true;
+      window.location.reload();
+    }
+  }
+}, { passive: true });
+
+document.addEventListener('touchend', () => {
+  touchStartY = 0;
+  touchCurrentY = 0;
+});
+
 // Register Service Worker for PWA and Mobile Notifications
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
